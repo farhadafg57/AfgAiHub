@@ -4,6 +4,7 @@ import { firebaseConfig } from '@/firebase/config';
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore'
+import { getFunctions } from 'firebase/functions';
 
 // IMPORTANT: DO NOT MODIFY THIS FUNCTION
 export function initializeFirebase() {
@@ -33,10 +34,13 @@ export function initializeFirebase() {
 }
 
 export function getSdks(firebaseApp: FirebaseApp) {
+  const functions = getFunctions(firebaseApp);
+  // connectFunctionsEmulator(functions, 'localhost', 5001); // Uncomment for local development
   return {
     firebaseApp,
     auth: getAuth(firebaseApp),
-    firestore: getFirestore(firebaseApp)
+    firestore: getFirestore(firebaseApp),
+    functions,
   };
 }
 
