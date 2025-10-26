@@ -1,12 +1,10 @@
 "use client";
 
-import 'server-only';
 import { useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
-  getQuranicGuidance,
   QuranicGuidanceInput,
   QuranicGuidanceOutput,
 } from '@/ai/flows/quran-tutor-spiritual-guidance';
@@ -31,17 +29,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '../ui/skeleton';
 import { BookOpen } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { getGuidanceAction } from '@/app/actions/quran-tutor-actions';
 
 const formSchema = z.object({
   query: z.string().min(10, 'Please enter a more detailed query.'),
 });
-
-async function getGuidanceAction(
-  input: QuranicGuidanceInput
-): Promise<QuranicGuidanceOutput> {
-  'use server';
-  return getQuranicGuidance(input);
-}
 
 export default function QuranTutor() {
   const [isPending, startTransition] = useTransition();

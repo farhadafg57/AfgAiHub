@@ -1,12 +1,10 @@
 "use client";
 
-import 'server-only';
 import { useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
-  getPreliminaryMedicalInformation,
   PreliminaryMedicalInformationInput,
   PreliminaryMedicalInformationOutput,
 } from '@/ai/flows/doctor-assistant-preliminary-information';
@@ -32,17 +30,11 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertTriangle, Stethoscope } from 'lucide-react';
 import { Skeleton } from '../ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
+import { getMedicalInfoAction } from '@/app/actions/doctor-assistant-actions';
 
 const formSchema = z.object({
   symptoms: z.string().min(20, 'Please describe your symptoms in more detail.'),
 });
-
-async function getMedicalInfoAction(
-  input: PreliminaryMedicalInformationInput
-): Promise<PreliminaryMedicalInformationOutput> {
-  'use server';
-  return getPreliminaryMedicalInformation(input);
-}
 
 export default function DoctorAssistant() {
   const [isPending, startTransition] = useTransition();

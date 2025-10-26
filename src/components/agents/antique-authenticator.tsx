@@ -1,13 +1,11 @@
 "use client";
 
-import 'server-only';
 import { useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import Image from 'next/image';
 import {
-  authenticateAntique,
   AuthenticateAntiqueInput,
   AuthenticateAntiqueOutput,
 } from '@/ai/flows/antique-authentication-insights';
@@ -33,6 +31,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Gem, Upload, DollarSign, Key, Microscope } from 'lucide-react';
 import { Skeleton } from '../ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
+import { authenticateAction } from '@/app/actions/antique-authenticator-actions';
 
 const formSchema = z.object({
   photoDataUri: z.string().refine((val) => val.startsWith('data:image/'), {
@@ -40,13 +39,6 @@ const formSchema = z.object({
   }),
   additionalDetails: z.string().optional(),
 });
-
-async function authenticateAction(
-  input: AuthenticateAntiqueInput
-): Promise<AuthenticateAntiqueOutput> {
-  'use server';
-  return authenticateAntique(input);
-}
 
 export default function AntiqueAuthenticator() {
   const [isPending, startTransition] = useTransition();
@@ -134,7 +126,7 @@ export default function AntiqueAuthenticator() {
                     <FormLabel>Additional Details</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="e.g., 'Found in grandmother's attic. Has a small chip on the base. Any maker's marks?'"
+                        placeholder="e.g., 'Found in grandmother\'s attic. Has a small chip on the base. Any maker\'s marks?'"
                         {...field}
                       />
                     </FormControl>

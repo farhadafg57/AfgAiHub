@@ -15,7 +15,8 @@ const AuthenticateAntiqueInputSchema = z.object({
   photoDataUri: z
     .string()
     .describe(
-      'A photo of the antique, as a data URI that must include a MIME type and use Base64 encoding. Expected format: \'data:<mimetype>;base64,<encoded_data>\'.'n    ),
+      'A photo of the antique, as a data URI that must include a MIME type and use Base64 encoding. Expected format: \'data:<mimetype>;base64,<encoded_data>\'.'
+    ),
   additionalDetails: z
     .string()
     .optional()
@@ -27,6 +28,7 @@ const AuthenticateAntiqueOutputSchema = z.object({
   authenticityAssessment: z.string().describe('An assessment of the antique\'s authenticity.'),
   keyFeatures: z
     .string()
+
     .describe('Key features observed in the image that contribute to the assessment.'),
   potentialValue: z
     .string()

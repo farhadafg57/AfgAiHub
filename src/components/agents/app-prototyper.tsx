@@ -1,12 +1,10 @@
 "use client";
 
-import 'server-only';
 import { useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
-  generateInitialCode,
   AppPrototyperInput,
   AppPrototyperOutput,
 } from '@/ai/flows/app-prototyper-initial-code-generation';
@@ -31,17 +29,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { AppWindow, Copy, Check } from 'lucide-react';
 import { Skeleton } from '../ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
+import { getAppCodeAction } from '@/app/actions/app-prototyper-actions';
 
 const formSchema = z.object({
   description: z.string().min(20, 'Please provide a more detailed description of your app idea.'),
 });
-
-async function getAppCodeAction(
-  input: AppPrototyperInput
-): Promise<AppPrototyperOutput> {
-  'use server';
-  return generateInitialCode(input);
-}
 
 export default function AppPrototyper() {
   const [isPending, startTransition] = useTransition();

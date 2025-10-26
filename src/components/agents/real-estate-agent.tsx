@@ -1,12 +1,10 @@
 "use client";
 
-import 'server-only';
 import { useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
-  getPropertyInformation,
   GetPropertyInformationInput,
   GetPropertyInformationOutput,
 } from '@/ai/flows/real-estate-agent-property-information';
@@ -32,18 +30,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Home } from 'lucide-react';
 import { Skeleton } from '../ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
+import { getPropertyInfoAction } from '@/app/actions/real-estate-agent-actions';
 
 const formSchema = z.object({
   propertyAddress: z.string().min(5, 'Please enter a valid address.'),
   userQuestion: z.string().min(10, 'Please ask a more detailed question.'),
 });
-
-async function getPropertyInfoAction(
-  input: GetPropertyInformationInput
-): Promise<GetPropertyInformationOutput> {
-  'use server';
-  return getPropertyInformation(input);
-}
 
 export default function RealEstateAgent() {
   const [isPending, startTransition] = useTransition();
