@@ -1,7 +1,7 @@
 'use server';
 import {initializeApp, getApps} from 'firebase-admin/app';
 import {getFirestore} from 'firebase-admin/firestore';
-import {onCall} from 'firebase-functions/v2/https';
+import {onCall, HttpsError} from 'firebase-functions/v2/https';
 import {onRequest} from 'firebase-functions/v2/https';
 import {defineString} from 'firebase-functions/params';
 import axios from 'axios';
@@ -46,7 +46,7 @@ export const createPaymentSession = onCall(async request => {
       console.error('HesabPay API response:', err.response.data);
     }
     // Correctly throw an HttpsError for onCall functions
-    throw new functions.https.HttpsError(
+    throw new HttpsError(
       'internal',
       'Failed to create payment session.',
       err.message
