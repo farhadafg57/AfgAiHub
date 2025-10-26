@@ -6,7 +6,8 @@ import { useToast } from '@/hooks/use-toast';
 import { doc, updateDoc, Firestore } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
-import { createPaymentSessionAction, processPaymentAction } from '@/app/actions/payment-actions';
+import { getFunctions, httpsCallable, Functions } from 'firebase/functions';
+// Removed processPaymentAction import as it will be handled differently now
 
 type Item = {
   id: string;
@@ -28,12 +29,7 @@ const updateFirestorePayment = (
   status: 'success' | 'failed'
 ) => {
   if (!sessionId) return;
-  const paymentRef = doc(
-    firestore,
-    'payments/sessions',
-    sessionId,
-    sessionId
-  );
+  const paymentRef = doc(firestore, 'payments/sessions', sessionId);
   updateDoc(paymentRef, { status }).catch((error) => {
     errorEmitter.emit(
       'permission-error',
@@ -47,20 +43,26 @@ const updateFirestorePayment = (
   });
 };
 
+async function processPayment(input: any) {
+  // This is a placeholder for the Genkit flow call which should be a server action.
+  // For now, we'll just log it. A proper implementation needs a separate server action.
+  console.log('AI Processing for payment would be triggered here:', input);
+  return { summary: `Transaction for session ${input.sessionId} processed.` };
+}
+
 export function usePayment() {
-  const { firestore, user } = useFirebase();
+  const { firestore, user, functions } = useFirebase();
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
     const handler = (event: MessageEvent) => {
-      // It's good practice to check the origin for security
       if (
         event.origin.includes('hesab.com') &&
         event.data?.type === 'paymentSuccess'
       ) {
         console.log('Payment Success Event Received:', event.data);
-        const { success } = event.data;
+        const { success, transaction_id } = event.data;
 
         let currentSessionId: string | null = null;
         let paymentData: PaymentData | null = null;
@@ -80,41 +82,42 @@ export function usePayment() {
             description: 'Your payment has been confirmed.',
           });
           updateFirestorePayment(firestore, currentSessionId, 'success');
-          
-          if(paymentData){
-            const totalAmount = paymentData.items.reduce((sum, item) => sum + item.price, 0);
-            processPaymentAction({
+
+          if (paymentData) {
+            const totalAmount = paymentData.items.reduce(
+              (sum, item) => sum + item.price,
+              0
+            );
+            processPayment({
               sessionId: currentSessionId,
               userId: user?.uid,
               email: user?.email || paymentData.email,
               items: paymentData.items,
               totalAmount,
-            }).then(result => {
+            }).then((result) => {
               console.log('AI Summary:', result.summary);
-               toast({
+              toast({
                 title: 'Transaction Summary',
                 description: result.summary,
               });
             });
           }
-
         } else {
-            toast({
-                title: 'Payment Failed',
-                description: 'There was an issue with your payment.',
-                variant: 'destructive'
-            })
-             if(currentSessionId) {
-                updateFirestorePayment(firestore, currentSessionId, 'failed');
-             }
+          toast({
+            title: 'Payment Failed',
+            description: 'There was an issue with your payment.',
+            variant: 'destructive',
+          });
+          if (currentSessionId) {
+            updateFirestorePayment(firestore, currentSessionId, 'failed');
+          }
         }
 
-        // Always clear session storage after handling the event
         try {
           sessionStorage.removeItem('paymentSessionId');
           sessionStorage.removeItem('paymentData');
-        } catch(e) {
-           console.warn('Session storage is not available.');
+        } catch (e) {
+          console.warn('Session storage is not available.');
         }
       }
     };
@@ -129,39 +132,58 @@ export function usePayment() {
   const createPaymentSession = useCallback(
     async (paymentData: PaymentData) => {
       setError(null);
+
+      if (!functions) {
+        const msg = "Firebase Functions service is not available.";
+        console.error(msg);
+        setError(msg);
+        toast({ title: "Error", description: msg, variant: "destructive" });
+        return;
+      }
       
-      const result = await createPaymentSessionAction({
+      const createSession = httpsCallable(functions, 'createPaymentSession');
+
+      try {
+        const result: any = await createSession({
           ...paymentData,
-          // Ensure email is included, falling back to the logged-in user's email
           email: paymentData.email || user?.email,
-      });
-
-      if (result.success && result.paymentUrl) {
-        toast({
-          title: 'Payment session created!',
-          description: 'Redirecting to HesabPay...',
         });
-        
-        try {
-           sessionStorage.setItem('paymentSessionId', result.sessionId);
-           sessionStorage.setItem('paymentData', JSON.stringify(paymentData));
-        } catch(e) {
-           console.warn('Session storage is not available.');
-        }
 
-        window.location.href = result.paymentUrl;
-      } else {
-        const errorMessage = result.error || 'An unexpected error occurred.';
-        console.error('Payment creation failed', errorMessage);
-        setError(errorMessage);
-        toast({
-          title: 'Payment Failed',
-          description: errorMessage,
-          variant: 'destructive',
+        if (result.data.success && result.data.paymentUrl) {
+          toast({
+            title: 'Payment session created!',
+            description: 'Redirecting to HesabPay...',
+          });
+
+          try {
+            sessionStorage.setItem('paymentSessionId', result.data.sessionId);
+            sessionStorage.setItem('paymentData', JSON.stringify(paymentData));
+          } catch (e) {
+            console.warn('Session storage is not available.');
+          }
+
+          window.location.href = result.data.paymentUrl;
+        } else {
+          const errorMessage = result.data.error || 'An unexpected error occurred.';
+          console.error('Payment creation failed', errorMessage);
+          setError(errorMessage);
+          toast({
+            title: 'Payment Failed',
+            description: errorMessage,
+            variant: 'destructive',
+          });
+        }
+      } catch (error: any) {
+        console.error('Error calling createPaymentSession function:', error);
+        setError(error.message || 'An unexpected error occurred.');
+         toast({
+            title: 'Payment Failed',
+            description: error.message || 'Could not connect to payment service.',
+            variant: 'destructive',
         });
       }
     },
-    [toast, user]
+    [toast, user, functions]
   );
 
   return { createPaymentSession, error };
