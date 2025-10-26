@@ -1,220 +1,228 @@
 /**
  * @file Firestore Security Rules
- * @description This ruleset enforces a strict user-ownership model for data access.
+ * @description This ruleset enforces a strict user-ownership model for all data stored in Firestore.
  *
  * Data Structure:
- * All data is nested under /users/{userId}, representing a user's private data tree.
- * - User profiles are stored directly at /users/{userId}.
- * - Interactions with AI agents (QuranTutor, DoctorAssistant, etc.) and payment transactions are stored as subcollections under each user.
+ * - All user-related data is nested under the `/users/{userId}` path.
+ * - AI agent interactions (e.g., QuranTutorInteractions, DoctorAssistantInteractions) are stored as subcollections under each user's document.
+ * - Each interaction document includes a denormalized `userId` field to simplify authorization checks.
  *
  * Key Security Decisions:
- * - Users can only access their own data.
- * - Listing of user documents (the /users collection itself) is disallowed.
- * - Each document contains a denormalized `userId` to allow for easy and performant ownership checks.
- *
- * Access Control Patterns:
- * - Ownership: Data under `/users/{userId}` and its subcollections is strictly controlled by the user identified by `{userId}`.
+ * - Users can only access their own data. Listing other user's data is explicitly denied.
+ * - All write operations (create, update, delete) require the user to be the owner of the data.
+ * - Data validation is limited to ensuring the consistency of the `userId` field across the path and the document.
  *
  * Denormalization for Authorization:
- * - All interaction documents (e.g., `QuranTutorInteraction`, `DoctorAssistantInteraction`) include the `userId` of the owning user. This denormalization avoids the need for complex `get()` calls in the security rules to verify ownership.
- * - Payment transactions under the `paymentTransactions` subcollection also include the `userId`.
+ * - The `userId` is included in each interaction document to avoid costly `get()` calls to the `/users/{userId}` document during authorization checks.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Prevents listing all user profiles. Access to individual profiles is controlled by the /users/{userId} rule.
-     * @path /users
-     * @allow (get) Not applicable; access is controlled by the /users/{userId} rule.
-     * @deny (list) Any attempt to list all user profiles.
-     * @principle Prevents unauthorized enumeration of user IDs.
-     */
-    match /users {
-      allow get: if false;
-      allow list: if false;
-      allow create: if false;
-      allow update: if false;
-      allow delete: if false;
-    }
-
-    /**
-     * @description Controls access to user profiles. Only the authenticated user can read or modify their own profile.
+     * @description Secures the user profile document. Only the user can read and write their own profile.
      * @path /users/{userId}
-     * @allow (create) An authenticated user creates their own profile.
-     * @allow (get) An authenticated user reads their own profile.
-     * @allow (update) An authenticated user updates their own profile.
-     * @deny (create) An unauthenticated user attempts to create a user profile.
-     * @deny (create) An authenticated user attempts to create a profile for a different user ID.
-     * @deny (get) An unauthenticated user attempts to read a user profile.
-     * @deny (update) An unauthenticated user attempts to update a user profile.
-     * @deny (update) An authenticated user attempts to update a profile for a different user ID.
-     * @deny (delete) An authenticated user attempts to delete another user's profile.
-     * @principle Enforces document ownership for user profiles.
+     * @allow (create) - User with UID 'user_abc' can create their profile if request.auth.uid == 'user_abc'.
+     * @allow (get) - User with UID 'user_abc' can read their profile if request.auth.uid == 'user_abc'.
+     * @allow (update) - User with UID 'user_abc' can update their profile if request.auth.uid == 'user_abc'.
+     * @allow (delete) - User with UID 'user_abc' can delete their profile if request.auth.uid == 'user_abc'.
+     * @deny (create) - User with UID 'user_xyz' cannot create a profile for 'user_abc'.
+     * @deny (get) - User with UID 'user_xyz' cannot read the profile of 'user_abc'.
+     * @principle Enforces document ownership for writes.
      */
     match /users/{userId} {
-      allow get: if isSignedIn() && isOwner(userId);
-      allow list: if false;
-      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.id == userId;
-      allow update: if isSignedIn() && isExistingOwner(userId) && request.resource.data.id == resource.data.id;
-      allow delete: if isSignedIn() && isExistingOwner(userId);
-    }
+      // Helper function to check if the request is made by the owner of the user document.
+      function isOwner(userId) {
+        return request.auth.uid == userId;
+      }
 
-    /**
-     * @description Controls access to QuranTutor interactions. Only the authenticated user can read or modify their own interactions.
-     * @path /users/{userId}/quranTutorInteractions/{interactionId}
-     * @allow (create) An authenticated user creates a new QuranTutor interaction under their profile.
-     * @allow (get) An authenticated user reads their own QuranTutor interaction.
-     * @allow (list) An authenticated user lists their own QuranTutor interactions.
-     * @allow (update) An authenticated user updates their own QuranTutor interaction.
-     * @deny (create) An unauthenticated user attempts to create a QuranTutor interaction.
-     * @deny (create) An authenticated user attempts to create a QuranTutor interaction for a different user ID.
-     * @deny (get) An unauthenticated user attempts to read a QuranTutor interaction.
-     * @deny (list) An unauthenticated user attempts to list QuranTutor interactions.
-     * @deny (update) An unauthenticated user attempts to update a QuranTutor interaction.
-     * @deny (update) An authenticated user attempts to update a QuranTutor interaction for a different user ID.
-     * @deny (delete) An authenticated user attempts to delete another user's QuranTutor interaction.
-     * @principle Enforces document ownership for QuranTutor interactions.
-     */
-    match /users/{userId}/quranTutorInteractions/{interactionId} {
-      allow get: if isSignedIn() && isOwner(userId);
-      allow list: if isSignedIn() && isOwner(userId);
-      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.userId == userId;
-      allow update: if isSignedIn() && isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
-      allow delete: if isSignedIn() && isExistingOwner(userId);
-    }
-
-    /**
-     * @description Controls access to DoctorAssistant interactions. Only the authenticated user can read or modify their own interactions.
-     * @path /users/{userId}/doctorAssistantInteractions/{interactionId}
-     * @allow (create) An authenticated user creates a new DoctorAssistant interaction under their profile.
-     * @allow (get) An authenticated user reads their own DoctorAssistant interaction.
-     * @allow (list) An authenticated user lists their own DoctorAssistant interactions.
-     * @allow (update) An authenticated user updates their own DoctorAssistant interaction.
-     * @deny (create) An unauthenticated user attempts to create a DoctorAssistant interaction.
-     * @deny (create) An authenticated user attempts to create a DoctorAssistant interaction for a different user ID.
-     * @deny (get) An unauthenticated user attempts to read a DoctorAssistant interaction.
-     * @deny (list) An unauthenticated user attempts to list DoctorAssistant interactions.
-     * @deny (update) An unauthenticated user attempts to update a DoctorAssistant interaction.
-     * @deny (update) An authenticated user attempts to update a DoctorAssistant interaction for a different user ID.
-     * @deny (delete) An authenticated user attempts to delete another user's DoctorAssistant interaction.
-     * @principle Enforces document ownership for DoctorAssistant interactions.
-     */
-    match /users/{userId}/doctorAssistantInteractions/{interactionId} {
-      allow get: if isSignedIn() && isOwner(userId);
-      allow list: if isSignedIn() && isOwner(userId);
-      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.userId == userId;
-      allow update: if isSignedIn() && isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
-      allow delete: if isSignedIn() && isExistingOwner(userId);
-    }
-
-    /**
-     * @description Controls access to RealEstateAgent interactions. Only the authenticated user can read or modify their own interactions.
-     * @path /users/{userId}/realEstateAgentInteractions/{interactionId}
-     * @allow (create) An authenticated user creates a new RealEstateAgent interaction under their profile.
-     * @allow (get) An authenticated user reads their own RealEstateAgent interaction.
-     * @allow (list) An authenticated user lists their own RealEstateAgent interactions.
-     * @allow (update) An authenticated user updates their own RealEstateAgent interaction.
-     * @deny (create) An unauthenticated user attempts to create a RealEstateAgent interaction.
-     * @deny (create) An authenticated user attempts to create a RealEstateAgent interaction for a different user ID.
-     * @deny (get) An unauthenticated user attempts to read a RealEstateAgent interaction.
-     * @deny (list) An unauthenticated user attempts to list RealEstateAgent interactions.
-     * @deny (update) An unauthenticated user attempts to update a RealEstateAgent interaction.
-     * @deny (update) An authenticated user attempts to update a RealEstateAgent interaction for a different user ID.
-     * @deny (delete) An authenticated user attempts to delete another user's RealEstateAgent interaction.
-     * @principle Enforces document ownership for RealEstateAgent interactions.
-     */
-    match /users/{userId}/realEstateAgentInteractions/{interactionId} {
-      allow get: if isSignedIn() && isOwner(userId);
-      allow list: if isSignedIn() && isOwner(userId);
-      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.userId == userId;
-      allow update: if isSignedIn() && isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
-      allow delete: if isSignedIn() && isExistingOwner(userId);
-    }
-
-    /**
-     * @description Controls access to AppPrototyper interactions. Only the authenticated user can read or modify their own interactions.
-     * @path /users/{userId}/appPrototyperInteractions/{interactionId}
-     * @allow (create) An authenticated user creates a new AppPrototyper interaction under their profile.
-     * @allow (get) An authenticated user reads their own AppPrototyper interaction.
-     * @allow (list) An authenticated user lists their own AppPrototyper interactions.
-     * @allow (update) An authenticated user updates their own AppPrototyper interaction.
-     * @deny (create) An unauthenticated user attempts to create a AppPrototyper interaction.
-     * @deny (create) An authenticated user attempts to create a AppPrototyper interaction for a different user ID.
-     * @deny (get) An unauthenticated user attempts to read a AppPrototyper interaction.
-     * @deny (list) An unauthenticated user attempts to list AppPrototyper interactions.
-     * @deny (update) An unauthenticated user attempts to update a AppPrototyper interaction.
-     * @deny (update) An authenticated user attempts to update a AppPrototyper interaction for a different user ID.
-     * @deny (delete) An authenticated user attempts to delete another user's AppPrototyper interaction.
-     * @principle Enforces document ownership for AppPrototyper interactions.
-     */
-    match /users/{userId}/appPrototyperInteractions/{interactionId} {
-      allow get: if isSignedIn() && isOwner(userId);
-      allow list: if isSignedIn() && isOwner(userId);
-      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.userId == userId;
-      allow update: if isSignedIn() && isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
-      allow delete: if isSignedIn() && isExistingOwner(userId);
-    }
-
-    /**
-     * @description Controls access to AntiqueAuthenticator interactions. Only the authenticated user can read or modify their own interactions.
-     * @path /users/{userId}/antiqueAuthenticatorInteractions/{interactionId}
-     * @allow (create) An authenticated user creates a new AntiqueAuthenticator interaction under their profile.
-     * @allow (get) An authenticated user reads their own AntiqueAuthenticator interaction.
-     * @allow (list) An authenticated user lists their own AntiqueAuthenticator interactions.
-     * @allow (update) An authenticated user updates their own AntiqueAuthenticator interaction.
-     * @deny (create) An unauthenticated user attempts to create a AntiqueAuthenticator interaction.
-     * @deny (create) An authenticated user attempts to create a AntiqueAuthenticator interaction for a different user ID.
-     * @deny (get) An unauthenticated user attempts to read a AntiqueAuthenticator interaction.
-     * @deny (list) An unauthenticated user attempts to list AntiqueAuthenticator interactions.
-     * @deny (update) An unauthenticated user attempts to update a AntiqueAuthenticator interaction.
-     * @deny (update) An authenticated user attempts to update a AntiqueAuthenticator interaction for a different user ID.
-     * @deny (delete) An authenticated user attempts to delete another user's AntiqueAuthenticator interaction.
-     * @principle Enforces document ownership for AntiqueAuthenticator interactions.
-     */
-    match /users/{userId}/antiqueAuthenticatorInteractions/{interactionId} {
-      allow get: if isSignedIn() && isOwner(userId);
-      allow list: if isSignedIn() && isOwner(userId);
-      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.userId == userId;
-      allow update: if isSignedIn() && isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
-      allow delete: if isSignedIn() && isExistingOwner(userId);
-    }
-
-    /**
-     * @description Controls access to PaymentTransaction documents. Only the authenticated user can read or modify their own transactions.
-     * @path /users/{userId}/paymentTransactions/{transactionId}
-     * @allow (create) An authenticated user creates a new PaymentTransaction document under their profile.
-     * @allow (get) An authenticated user reads their own PaymentTransaction document.
-     * @allow (list) An authenticated user lists their own PaymentTransaction documents.
-     * @allow (update) An authenticated user updates their own PaymentTransaction document.
-     * @deny (create) An unauthenticated user attempts to create a PaymentTransaction document.
-     * @deny (create) An authenticated user attempts to create a PaymentTransaction document for a different user ID.
-     * @deny (get) An unauthenticated user attempts to read a PaymentTransaction document.
-     * @deny (list) An unauthenticated user attempts to list PaymentTransaction documents.
-     * @deny (update) An unauthenticated user attempts to update a PaymentTransaction document.
-     * @deny (update) An authenticated user attempts to update a PaymentTransaction document for a different user ID.
-     * @deny (delete) An authenticated user attempts to delete another user's PaymentTransaction document.
-     * @principle Enforces document ownership for PaymentTransaction documents.
-     */
-    match /users/{userId}/paymentTransactions/{transactionId} {
-      allow get: if isSignedIn() && isOwner(userId);
-      allow list: if isSignedIn() && isOwner(userId);
-      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.userId == userId;
-      allow update: if isSignedIn() && isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
-      allow delete: if isSignedIn() && isExistingOwner(userId);
-    }
-
-    // Helper functions
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    function isOwner(userId) {
-      return request.auth.uid == userId;
-    }
-
-    function isExistingOwner(userId) {
+      // Helper function to check if the request is made by the existing owner of the user document.
+      function isExistingOwner(userId) {
         return isOwner(userId) && resource != null;
+      }
+
+      // Allows a user to create their own profile if the userId matches their auth UID.
+      allow create: if isOwner(userId);
+
+      // Allows a user to read their own profile.
+      allow get: if isOwner(userId);
+
+      // Allows a user to update their own profile.
+      allow update: if isExistingOwner(userId);
+
+      // Allows a user to delete their own profile.
+      allow delete: if isExistingOwner(userId);
+
+      // List is disallowed on the /users collection
+      allow list: if false;
+
+      /**
+       * @description Secures interactions with the QuranTutor AI agent. Only the user can read and write their own interactions.
+       * @path /users/{userId}/quranTutorInteractions/{interactionId}
+       * @allow (create) - User with UID 'user_abc' can create an interaction if request.auth.uid == 'user_abc'.
+       * @allow (get) - User with UID 'user_abc' can read their interaction if request.auth.uid == 'user_abc'.
+       * @allow (update) - User with UID 'user_abc' can update their interaction if request.auth.uid == 'user_abc'.
+       * @allow (delete) - User with UID 'user_abc' can delete their interaction if request.auth.uid == 'user_abc'.
+       * @deny (create) - User with UID 'user_xyz' cannot create an interaction for 'user_abc'.
+       * @deny (get) - User with UID 'user_xyz' cannot read an interaction of 'user_abc'.
+       * @principle Enforces document ownership for writes.
+       */
+      match /quranTutorInteractions/{interactionId} {
+        // Allows a user to create an interaction if the userId matches their auth UID.
+        allow create: if isOwner(userId) && request.resource.data.userId == userId;
+
+        // Allows a user to read their own interaction.
+        allow get: if isOwner(userId);
+
+        // Allows a user to list their own interactions.
+        allow list: if isOwner(userId);
+
+        // Allows a user to update their own interaction.
+        allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+
+        // Allows a user to delete their own interaction.
+        allow delete: if isExistingOwner(userId);
+      }
+
+      /**
+       * @description Secures interactions with the DoctorAssistant AI agent. Only the user can read and write their own interactions.
+       * @path /users/{userId}/doctorAssistantInteractions/{interactionId}
+       * @allow (create) - User with UID 'user_abc' can create an interaction if request.auth.uid == 'user_abc'.
+       * @allow (get) - User with UID 'user_abc' can read their interaction if request.auth.uid == 'user_abc'.
+       * @allow (update) - User with UID 'user_abc' can update their interaction if request.auth.uid == 'user_abc'.
+       * @allow (delete) - User with UID 'user_abc' can delete their interaction if request.auth.uid == 'user_abc'.
+       * @deny (create) - User with UID 'user_xyz' cannot create an interaction for 'user_abc'.
+       * @deny (get) - User with UID 'user_xyz' cannot read an interaction of 'user_abc'.
+       * @principle Enforces document ownership for writes.
+       */
+      match /doctorAssistantInteractions/{interactionId} {
+        // Allows a user to create an interaction if the userId matches their auth UID.
+        allow create: if isOwner(userId) && request.resource.data.userId == userId;
+
+        // Allows a user to read their own interaction.
+        allow get: if isOwner(userId);
+
+        // Allows a user to list their own interactions.
+        allow list: if isOwner(userId);
+
+        // Allows a user to update their own interaction.
+        allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+
+        // Allows a user to delete their own interaction.
+        allow delete: if isExistingOwner(userId);
+      }
+
+      /**
+       * @description Secures interactions with the RealEstateAgent AI agent. Only the user can read and write their own interactions.
+       * @path /users/{userId}/realEstateAgentInteractions/{interactionId}
+       * @allow (create) - User with UID 'user_abc' can create an interaction if request.auth.uid == 'user_abc'.
+       * @allow (get) - User with UID 'user_abc' can read their interaction if request.auth.uid == 'user_abc'.
+       * @allow (update) - User with UID 'user_abc' can update their interaction if request.auth.uid == 'user_abc'.
+       * @allow (delete) - User with UID 'user_abc' can delete their interaction if request.auth.uid == 'user_abc'.
+       * @deny (create) - User with UID 'user_xyz' cannot create an interaction for 'user_abc'.
+       * @deny (get) - User with UID 'user_xyz' cannot read an interaction of 'user_abc'.
+       * @principle Enforces document ownership for writes.
+       */
+      match /realEstateAgentInteractions/{interactionId} {
+        // Allows a user to create an interaction if the userId matches their auth UID.
+        allow create: if isOwner(userId) && request.resource.data.userId == userId;
+
+        // Allows a user to read their own interaction.
+        allow get: if isOwner(userId);
+
+        // Allows a user to list their own interactions.
+        allow list: if isOwner(userId);
+
+        // Allows a user to update their own interaction.
+        allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+
+        // Allows a user to delete their own interaction.
+        allow delete: if isExistingOwner(userId);
+      }
+
+      /**
+       * @description Secures interactions with the AppPrototyper AI agent. Only the user can read and write their own interactions.
+       * @path /users/{userId}/appPrototyperInteractions/{interactionId}
+       * @allow (create) - User with UID 'user_abc' can create an interaction if request.auth.uid == 'user_abc'.
+       * @allow (get) - User with UID 'user_abc' can read their interaction if request.auth.uid == 'user_abc'.
+       * @allow (update) - User with UID 'user_abc' can update their interaction if request.auth.uid == 'user_abc'.
+       * @allow (delete) - User with UID 'user_abc' can delete their interaction if request.auth.uid == 'user_abc'.
+       * @deny (create) - User with UID 'user_xyz' cannot create an interaction for 'user_abc'.
+       * @deny (get) - User with UID 'user_xyz' cannot read an interaction of 'user_abc'.
+       * @principle Enforces document ownership for writes.
+       */
+      match /appPrototyperInteractions/{interactionId} {
+        // Allows a user to create an interaction if the userId matches their auth UID.
+        allow create: if isOwner(userId) && request.resource.data.userId == userId;
+
+        // Allows a user to read their own interaction.
+        allow get: if isOwner(userId);
+
+        // Allows a user to list their own interactions.
+        allow list: if isOwner(userId);
+
+        // Allows a user to update their own interaction.
+        allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+
+        // Allows a user to delete their own interaction.
+        allow delete: if isExistingOwner(userId);
+      }
+
+      /**
+       * @description Secures interactions with the AntiqueAuthenticator AI agent. Only the user can read and write their own interactions.
+       * @path /users/{userId}/antiqueAuthenticatorInteractions/{interactionId}
+       * @allow (create) - User with UID 'user_abc' can create an interaction if request.auth.uid == 'user_abc'.
+       * @allow (get) - User with UID 'user_abc' can read their interaction if request.auth.uid == 'user_abc'.
+       * @allow (update) - User with UID 'user_abc' can update their interaction if request.auth.uid == 'user_abc'.
+       * @allow (delete) - User with UID 'user_abc' can delete their interaction if request.auth.uid == 'user_abc'.
+       * @deny (create) - User with UID 'user_xyz' cannot create an interaction for 'user_abc'.
+       * @deny (get) - User with UID 'user_xyz' cannot read an interaction of 'user_abc'.
+       * @principle Enforces document ownership for writes.
+       */
+      match /antiqueAuthenticatorInteractions/{interactionId} {
+        // Allows a user to create an interaction if the userId matches their auth UID.
+        allow create: if isOwner(userId) && request.resource.data.userId == userId;
+
+        // Allows a user to read their own interaction.
+        allow get: if isOwner(userId);
+
+        // Allows a user to list their own interactions.
+        allow list: if isOwner(userId);
+
+        // Allows a user to update their own interaction.
+        allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+
+        // Allows a user to delete their own interaction.
+        allow delete: if isExistingOwner(userId);
+      }
+
+      /**
+       * @description Secures payment transactions. Only the user can read and write their own transactions.
+       * @path /users/{userId}/paymentTransactions/{transactionId}
+       * @allow (create) - User with UID 'user_abc' can create a transaction if request.auth.uid == 'user_abc'.
+       * @allow (get) - User with UID 'user_abc' can read their transaction if request.auth.uid == 'user_abc'.
+       * @allow (update) - User with UID 'user_abc' can update their transaction if request.auth.uid == 'user_abc'.
+       * @allow (delete) - User with UID 'user_abc' can delete their transaction if request.auth.uid == 'user_abc'.
+       * @deny (create) - User with UID 'user_xyz' cannot create a transaction for 'user_abc'.
+       * @deny (get) - User with UID 'user_xyz' cannot read a transaction of 'user_abc'.
+       * @principle Enforces document ownership for writes.
+       */
+      match /paymentTransactions/{transactionId} {
+        // Allows a user to create a transaction if the userId matches their auth UID.
+        allow create: if isOwner(userId) && request.resource.data.userId == userId;
+
+        // Allows a user to read their own transaction.
+        allow get: if isOwner(userId);
+
+        // Allows a user to list their own transactions.
+        allow list: if isOwner(userId);
+
+        // Allows a user to update their own transaction.
+        allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+
+        // Allows a user to delete their own transaction.
+        allow delete: if isExistingOwner(userId);
+      }
     }
   }
 }
