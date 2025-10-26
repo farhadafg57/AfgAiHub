@@ -29,9 +29,11 @@ export function Header({ title }: HeaderProps) {
   };
 
   return (
-    <header className="flex h-14 items-center gap-4 border-b bg-background/60 px-4 lg:h-[60px] lg:px-6 backdrop-blur-sm sticky top-0 z-30">
-      <SidebarTrigger className="md:hidden" />
-      <h1 className="text-lg font-semibold md:text-2xl font-headline">{title}</h1>
+    <header className="flex h-14 items-center gap-4 border-b bg-background/60 px-4 shrink-0 lg:px-6 backdrop-blur-sm sticky top-0 z-30">
+      <SidebarTrigger className="flex md:hidden" />
+      <div className="w-full flex-1">
+         <h1 className="text-lg font-semibold md:text-2xl font-headline">{title}</h1>
+      </div>
       <div className="ml-auto">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

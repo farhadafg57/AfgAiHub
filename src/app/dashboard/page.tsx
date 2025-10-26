@@ -15,36 +15,49 @@ import { agents } from '@/lib/agents';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 export default function Dashboard() {
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+      },
+    },
+  };
+  
   const cardVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: (i: number) => ({
+    hidden: { opacity: 0, y: 50 },
+    visible: {
       opacity: 1,
       y: 0,
       transition: {
-        delay: i * 0.1,
-        duration: 0.5,
-        ease: 'easeOut',
+        type: 'spring',
+        stiffness: 100,
+        damping: 10,
       },
-    }),
+    },
   };
 
   return (
     <div className="flex flex-col w-full">
       <Header title="Dashboard" />
       <main className="flex-1 p-4 sm:p-6 lg:p-8">
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {agents.map((agent, i) => {
+        <motion.div 
+          className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
+          {agents.map((agent) => {
             const placeholderImage = PlaceHolderImages.find(
               (p) => p.id === agent.id
             );
             return (
               <motion.div
                 key={agent.id}
-                custom={i}
-                initial="hidden"
-                animate="visible"
                 variants={cardVariants}
                 whileHover={{ y: -5, boxShadow: '0 8px 30px rgba(var(--primary), 0.2)' }}
+                whileTap={{ scale: 0.98 }}
                 transition={{ duration: 0.3 }}
               >
                 <Link href={agent.href}>
@@ -81,7 +94,7 @@ export default function Dashboard() {
               </motion.div>
             );
           })}
-        </div>
+        </motion.div>
       </main>
     </div>
   );
