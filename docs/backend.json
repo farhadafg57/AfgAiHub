@@ -1,0 +1,400 @@
+{
+  "entities": {
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user of the AfgAiHub platform.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the user."
+        },
+        "email": {
+          "type": "string",
+          "description": "Email address of the user.",
+          "format": "email"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the user account was created.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "email",
+        "createdAt"
+      ]
+    },
+    "QuranTutorInteraction": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "QuranTutorInteraction",
+      "type": "object",
+      "description": "Represents a single interaction between a user and the QuranTutor AI agent.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the interaction."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the User who initiated the interaction. (Relationship: User 1:N QuranTutorInteraction)"
+        },
+        "query": {
+          "type": "string",
+          "description": "The user's query to the QuranTutor."
+        },
+        "response": {
+          "type": "string",
+          "description": "The response from the QuranTutor."
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "Timestamp indicating when the interaction occurred.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "query",
+        "response",
+        "timestamp"
+      ]
+    },
+    "DoctorAssistantInteraction": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "DoctorAssistantInteraction",
+      "type": "object",
+      "description": "Represents a single interaction between a user and the DoctorAssistant AI agent.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the interaction."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the User who initiated the interaction. (Relationship: User 1:N DoctorAssistantInteraction)"
+        },
+        "query": {
+          "type": "string",
+          "description": "The user's query to the DoctorAssistant."
+        },
+        "response": {
+          "type": "string",
+          "description": "The response from the DoctorAssistant."
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "Timestamp indicating when the interaction occurred.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "query",
+        "response",
+        "timestamp"
+      ]
+    },
+    "RealEstateAgentInteraction": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "RealEstateAgentInteraction",
+      "type": "object",
+      "description": "Represents a single interaction between a user and the RealEstateAgent AI agent.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the interaction."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the User who initiated the interaction. (Relationship: User 1:N RealEstateAgentInteraction)"
+        },
+        "query": {
+          "type": "string",
+          "description": "The user's query to the RealEstateAgent."
+        },
+        "response": {
+          "type": "string",
+          "description": "The response from the RealEstateAgent."
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "Timestamp indicating when the interaction occurred.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "query",
+        "response",
+        "timestamp"
+      ]
+    },
+    "AppPrototyperInteraction": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "AppPrototyperInteraction",
+      "type": "object",
+      "description": "Represents a single interaction between a user and the AppPrototyper AI agent.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the interaction."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the User who initiated the interaction. (Relationship: User 1:N AppPrototyperInteraction)"
+        },
+        "prompt": {
+          "type": "string",
+          "description": "The user's prompt to generate the app prototype."
+        },
+        "generatedCode": {
+          "type": "string",
+          "description": "The generated code of the app prototype."
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "Timestamp indicating when the interaction occurred.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "prompt",
+        "generatedCode",
+        "timestamp"
+      ]
+    },
+    "AntiqueAuthenticatorInteraction": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "AntiqueAuthenticatorInteraction",
+      "type": "object",
+      "description": "Represents a single interaction between a user and the AntiqueAuthenticator AI agent.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the interaction."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the User who initiated the interaction. (Relationship: User 1:N AntiqueAuthenticatorInteraction)"
+        },
+        "imageUri": {
+          "type": "string",
+          "description": "URI of the image submitted for authentication.",
+          "format": "uri"
+        },
+        "authenticationReport": {
+          "type": "string",
+          "description": "The authentication report generated by the AI."
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "Timestamp indicating when the interaction occurred.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "imageUri",
+        "authenticationReport",
+        "timestamp"
+      ]
+    },
+    "PaymentTransaction": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "PaymentTransaction",
+      "type": "object",
+      "description": "Represents a payment transaction made through HesabPay.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the transaction."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the User who initiated the payment. (Relationship: User 1:N PaymentTransaction)"
+        },
+        "transactionId": {
+          "type": "string",
+          "description": "The transaction ID from HesabPay."
+        },
+        "amount": {
+          "type": "number",
+          "description": "The amount of the transaction."
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "Timestamp indicating when the transaction occurred.",
+          "format": "date-time"
+        },
+        "status": {
+          "type": "string",
+          "description": "The status of the payment transaction (e.g., pending, completed, failed)."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "transactionId",
+        "amount",
+        "timestamp",
+        "status"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user profiles. Each document is keyed by the user's unique Firebase Auth ID.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique ID of the user, matching the Firebase Auth UID."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/quranTutorInteractions/{interactionId}",
+        "definition": {
+          "entityName": "QuranTutorInteraction",
+          "schema": {
+            "$ref": "#/backend/entities/QuranTutorInteraction"
+          },
+          "description": "Stores interactions between a user and the QuranTutor AI agent. Includes denormalized 'userId' for authorization independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique ID of the user."
+            },
+            {
+              "name": "interactionId",
+              "description": "The unique ID of the interaction."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/doctorAssistantInteractions/{interactionId}",
+        "definition": {
+          "entityName": "DoctorAssistantInteraction",
+          "schema": {
+            "$ref": "#/backend/entities/DoctorAssistantInteraction"
+          },
+          "description": "Stores interactions between a user and the DoctorAssistant AI agent. Includes denormalized 'userId' for authorization independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique ID of the user."
+            },
+            {
+              "name": "interactionId",
+              "description": "The unique ID of the interaction."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/realEstateAgentInteractions/{interactionId}",
+        "definition": {
+          "entityName": "RealEstateAgentInteraction",
+          "schema": {
+            "$ref": "#/backend/entities/RealEstateAgentInteraction"
+          },
+          "description": "Stores interactions between a user and the RealEstateAgent AI agent. Includes denormalized 'userId' for authorization independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique ID of the user."
+            },
+            {
+              "name": "interactionId",
+              "description": "The unique ID of the interaction."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/appPrototyperInteractions/{interactionId}",
+        "definition": {
+          "entityName": "AppPrototyperInteraction",
+          "schema": {
+            "$ref": "#/backend/entities/AppPrototyperInteraction"
+          },
+          "description": "Stores interactions between a user and the AppPrototyper AI agent. Includes denormalized 'userId' for authorization independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique ID of the user."
+            },
+            {
+              "name": "interactionId",
+              "description": "The unique ID of the interaction."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/antiqueAuthenticatorInteractions/{interactionId}",
+        "definition": {
+          "entityName": "AntiqueAuthenticatorInteraction",
+          "schema": {
+            "$ref": "#/backend/entities/AntiqueAuthenticatorInteraction"
+          },
+          "description": "Stores interactions between a user and the AntiqueAuthenticator AI agent. Includes denormalized 'userId' for authorization independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique ID of the user."
+            },
+            {
+              "name": "interactionId",
+              "description": "The unique ID of the interaction."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/paymentTransactions/{transactionId}",
+        "definition": {
+          "entityName": "PaymentTransaction",
+          "schema": {
+            "$ref": "#/backend/entities/PaymentTransaction"
+          },
+          "description": "Stores payment transactions made by the user. Includes denormalized 'userId' for authorization independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique ID of the user."
+            },
+            {
+              "name": "transactionId",
+              "description": "The unique ID of the transaction."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to be secure, scalable, and easily debuggable, following the core design principles and strategy mandates. It avoids hierarchical authorization dependencies by denormalizing authorization data, ensuring each document contains all the necessary information for access control. The structure segregates data based on access needs and employs consistent access modeling patterns for clarity and predictability.  It uses path-based ownership for user-specific data and a membership map when collaboration is needed.\n\n**Authorization Independence:** User interactions with each AI agent are stored as subcollections under the `/users/{userId}` path. Each interaction document (`QuranTutorInteraction`, `DoctorAssistantInteraction`, etc.) includes the `userId`, effectively denormalizing the user-agent relationship. This eliminates the need for `get()` calls in security rules to verify user ownership.\n\n**Structural Segregation:** Each type of agent interaction is stored in its own subcollection. This allows you to define specific security rules tailored to the data within each collection, ensuring that rules are not overly permissive to accommodate diverse data types.\n\n**Access Modeling:** The structure utilizes path-based ownership (`/users/{userId}/...`) for all agent interactions. This simplifies security rules by directly associating data with the user who owns it.\n\n**QAPs (Rules are not Filters):** The path-based ownership structure enables efficient and secure `list` operations. You can easily list all interactions for a specific user without needing to filter based on the `userId` within the documents themselves.\n\n**Invariants:** The structure supports the integrity of ownership, timestamps, and denormalized data. The `userId` field in each interaction document ensures that the ownership invariant is maintained. Timestamps (`createdAt`) are directly stored in the user document and in interaction documents."
+  }
+}
