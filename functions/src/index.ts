@@ -7,7 +7,7 @@
  * See a full list of supported triggers at https://firebase.google.com/docs/functions
  */
 
-import {setGlobalOptions} from "firebase-functions";
+import {setGlobalOptions} from "firebase-functions/v2";
 import * as payments from './payments';
 
 // Start writing functions
@@ -27,3 +27,4 @@ setGlobalOptions({ maxInstances: 10 });
 
 export const createPaymentSession = payments.createPaymentSession;
 export const verifyHesabWebhook = payments.verifyHesabWebhook;
+export const distributePaymentToVendors = payments.distributePaymentToVendors;
