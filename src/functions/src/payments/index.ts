@@ -1,7 +1,7 @@
-'use server';
 import { initializeApp, getApps } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
-import { onCall, HttpsError } from 'firebase-functions/v2/https'; // Corrected import
+import { onCall, HttpsError } from 'firebase-functions/v2/https';
+import { onRequest } from 'firebase-functions/v2/https';
 import { defineString } from 'firebase-functions/params';
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
@@ -62,6 +62,7 @@ export const createPaymentSession = onCall(async (request) => {
     const response = await axios.post(apiEndpoint, payload, { headers });
     
     if (response.status !== 200 || !response.data?.sessionId) {
+      console.error("Invalid response from HesabPay:", response.data);
       throw new Error('Invalid response from HesabPay');
     }
 
@@ -155,5 +156,60 @@ export const distributePaymentToVendors = onCall(async (request) => {
       'Failed to distribute payments to vendors.',
       err.message
     );
+  }
+});
+
+
+// --- 3. Verify HesabPay Webhook ---
+export const verifyHesabWebhook = onRequest(async (req, res) => {
+  if (req.method !== 'POST') {
+    res.status(405).send('Method Not Allowed');
+    return;
+  }
+
+  const { signature, timestamp, transaction_id, status_code } = req.body;
+
+  if (!signature || !timestamp || !transaction_id || status_code === undefined) {
+    res.status(400).send('Missing required fields in webhook payload.');
+    return;
+  }
+
+  const apiKey = hesabpayApiKey.value();
+  // Corrected endpoint
+  const verificationEndpoint = 'https://api.hesab.com/api/v1/hesab/webhooks/verify-signature';
+  
+  const verificationHeaders = {
+      Authorization: `API-KEY ${apiKey}`,
+      'Content-Type': 'application/json',
+  };
+  const verificationPayload = { signature, timestamp };
+
+  try {
+    const verificationResponse = await axios.post(verificationEndpoint, verificationPayload, { headers: verificationHeaders });
+
+    if (verificationResponse.data?.success !== true) {
+      console.warn('Invalid webhook signature received.');
+      res.status(403).send('Invalid signature.');
+      return;
+    }
+
+    // Signature is valid, proceed to update Firestore
+    const paymentStatus = req.body.success ? 'success' : 'failed';
+    const paymentSessionId = transaction_id; // Assuming transaction_id corresponds to our sessionId
+
+    const paymentRef = db.collection('payments/sessions').doc(paymentSessionId);
+    
+    await paymentRef.update({
+      status: paymentStatus,
+      webhookVerifiedAt: new Date().toISOString(),
+      webhookPayload: req.body, // Store the full payload for auditing
+    });
+
+    console.log(`Payment ${paymentSessionId} status updated to ${paymentStatus} via webhook.`);
+    res.status(200).send('Webhook processed successfully.');
+
+  } catch (error: any) {
+    console.error('Error processing webhook:', error.response?.data || error.message);
+    res.status(500).send('Internal Server Error while processing webhook.');
   }
 });
