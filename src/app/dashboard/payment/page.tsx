@@ -31,7 +31,7 @@ export default function PaymentPage() {
         
         const items = [{ id: 'premium-plan', name: 'AfgAiHub Premium', price: 1000 }];
         
-        const result = await createPaymentSession({ items, email: user.email! });
+        const result = await createPaymentSession({ items, email: user.email!, userId: user.uid });
         
         const data = result.data as { success: boolean; paymentUrl?: string; error?: string };
 
