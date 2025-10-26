@@ -1,13 +1,6 @@
 'use server';
-import { getFunctions, httpsCallable } from 'firebase-admin/functions';
-import admin from 'firebase-admin';
-
-// Ensure the admin app is initialized
-if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.applicationDefault(),
-  });
-}
+import { getFunctions, httpsCallable } from 'firebase/functions';
+import { initializeFirebase } from '@/firebase';
 
 type PaymentItem = {
   name: string;
@@ -30,7 +23,9 @@ export async function createPaymentSessionAction(
   input: CreatePaymentSessionInput
 ): Promise<CreatePaymentSessionOutput> {
   try {
-    const functions = getFunctions(admin.app());
+    // Use the client SDK to call the function.
+    // initializeFirebase() ensures we have a valid app instance.
+    const { functions } = initializeFirebase();
     const createPaymentSession = httpsCallable(functions, 'createPaymentSession');
     
     const result = await createPaymentSession(input);
@@ -38,6 +33,7 @@ export async function createPaymentSessionAction(
     return result.data as CreatePaymentSessionOutput;
   } catch (error: any) {
     console.error('Error calling createPaymentSession function:', error);
+    // The error object from a callable function has a 'message' and 'details' property
     const errorMessage = error.details?.message || error.message || 'An unknown error occurred.';
     return { success: false, error: errorMessage };
   }
