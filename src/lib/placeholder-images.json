@@ -29,6 +29,36 @@
       "description": "A placeholder image for the Antique Authenticator agent.",
       "imageUrl": "https://images.unsplash.com/photo-1695902047073-796e00ccd35f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxhbnRpcXVlJTIwdmFzZXxlbnwwfHx8fDE3NjE1MDU3NzR8MA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "antique vase"
+    },
+    {
+      "id": "legal-assistant",
+      "description": "A placeholder image for the Legal Assistant agent.",
+      "imageUrl": "https://images.unsplash.com/photo-1752697589032-3717e8b24753?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxsZWdhbCUyMGJvb2tzfGVufDB8fHx8MTc2MTUyMjgzOXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "legal books"
+    },
+    {
+      "id": "career-coach",
+      "description": "A placeholder image for the Career Coach agent.",
+      "imageUrl": "https://images.unsplash.com/photo-1606836591695-4d58a73eba1e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxvZmZpY2UlMjBtZWV0aW5nfGVufDB8fHx8MTc2MTQ3ODI4OHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "office meeting"
+    },
+    {
+      "id": "travel-planner",
+      "description": "A placeholder image for the Travel Planner agent.",
+      "imageUrl": "https://images.unsplash.com/photo-1451187580459-43490279c0fa?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHx3b3JsZCUyMG1hcHxlbnwwfHx8fDE3NjE0NzQyNjR8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "world map"
+    },
+    {
+      "id": "fitness-trainer",
+      "description": "A placeholder image for the Fitness Trainer agent.",
+      "imageUrl": "https://images.unsplash.com/photo-1577221084712-45b0445d2b00?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxneW0lMjB3b3Jrb3V0fGVufDB8fHx8MTc2MTQ0OTc5NXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "gym workout"
+    },
+    {
+      "id": "content-creator",
+      "description": "A placeholder image for the Content Creator agent.",
+      "imageUrl": "https://images.unsplash.com/photo-1594849966511-77c211e68154?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8d3JpdGluZyUyMGRlc2t8ZW58MHx8fHwxNzYxNDQ2MjE2fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "writing desk"
     }
   ]
 }

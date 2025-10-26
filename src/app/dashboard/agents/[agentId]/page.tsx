@@ -1,3 +1,4 @@
+
 import { notFound } from 'next/navigation';
 import { agents } from '@/lib/agents';
 import { Header } from '@/components/layout/header';
@@ -6,6 +7,11 @@ import DoctorAssistant from '@/components/agents/doctor-assistant';
 import RealEstateAgent from '@/components/agents/real-estate-agent';
 import AppPrototyper from '@/components/agents/app-prototyper';
 import AntiqueAuthenticator from '@/components/agents/antique-authenticator';
+import LegalAssistant from '@/components/agents/legal-assistant';
+import CareerCoach from '@/components/agents/career-coach';
+import TravelPlanner from '@/components/agents/travel-planner';
+import FitnessTrainer from '@/components/agents/fitness-trainer';
+import ContentCreator from '@/components/agents/content-creator';
 
 type AgentPageProps = {
   params: {
@@ -19,6 +25,11 @@ const agentComponents: Record<string, React.ComponentType> = {
   'real-estate-agent': RealEstateAgent,
   'app-prototyper': AppPrototyper,
   'antique-authenticator': AntiqueAuthenticator,
+  'legal-assistant': LegalAssistant,
+  'career-coach': CareerCoach,
+  'travel-planner': TravelPlanner,
+  'fitness-trainer': FitnessTrainer,
+  'content-creator': ContentCreator,
 };
 
 export default function AgentPage({ params }: AgentPageProps) {

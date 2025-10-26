@@ -1,3 +1,4 @@
+
 import type { LucideIcon } from 'lucide-react';
 import {
   AppWindow,
@@ -7,6 +8,11 @@ import {
   LayoutDashboard,
   Stethoscope,
   CreditCard,
+  Scale,
+  Briefcase,
+  Plane,
+  HeartPulse,
+  PenSquare,
 } from 'lucide-react';
 
 export type Agent = {
@@ -53,6 +59,41 @@ export const agents: Agent[] = [
     icon: Gem,
     href: '/dashboard/agents/antique-authenticator',
   },
+  {
+    id: 'legal-assistant',
+    name: 'Legal Assistant',
+    description: 'Preliminary legal information and simple document drafting.',
+    icon: Scale,
+    href: '/dashboard/agents/legal-assistant',
+  },
+  {
+    id: 'career-coach',
+    name: 'Career Coach',
+    description: 'Get career advice, resume feedback, and job search strategies.',
+    icon: Briefcase,
+    href: '/dashboard/agents/career-coach',
+  },
+  {
+    id: 'travel-planner',
+    name: 'Travel Planner',
+    description: 'Creates personalized travel itineraries and provides recommendations.',
+    icon: Plane,
+    href: '/dashboard/agents/travel-planner',
+  },
+  {
+    id: 'fitness-trainer',
+    name: 'Fitness Trainer',
+    description: 'Designs custom workout plans and offers fitness advice.',
+    icon: HeartPulse,
+    href: '/dashboard/agents/fitness-trainer',
+  },
+  {
+    id: 'content-creator',
+    name: 'Content Creator',
+    description: 'Generates content ideas, drafts articles, and suggests social media posts.',
+    icon: PenSquare,
+    href: '/dashboard/agents/content-creator',
+  },
 ];
 
 export const navigationLinks = [
@@ -66,5 +107,5 @@ export const navigationLinks = [
     name: 'Payments',
     href: '/dashboard/payment',
     icon: CreditCard,
-  }
+  },
 ];
