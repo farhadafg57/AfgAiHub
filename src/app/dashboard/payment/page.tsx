@@ -26,8 +26,8 @@ export default function PaymentPage() {
 
     startTransition(async () => {
       try {
-        const items = [{ name: 'AfgAiHub Premium', price: 1000, quantity: 1 }];
-        const result = await createPaymentSessionAction({ items, email: user.email });
+        const items = [{ id: 'premium-plan', name: 'AfgAiHub Premium', price: 1000 }];
+        const result = await createPaymentSessionAction({ items, email: user.email! });
 
         if (result.success && result.paymentUrl) {
           window.location.href = result.paymentUrl;
