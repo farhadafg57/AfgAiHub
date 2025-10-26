@@ -6,53 +6,51 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useFirebase } from '@/firebase';
-import { collection, doc, setDoc } from 'firebase/firestore';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 import { Loader2 } from 'lucide-react';
-import { v4 as uuidv4 } from 'uuid';
 
 export default function PaymentPage() {
-  const { user, firestore } = useFirebase();
+  const { user, firebaseApp } = useFirebase();
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
 
   const handleUpgrade = () => {
-    if (!user || !user.email || !firestore) {
-      toast({
-        title: 'Authentication Error',
-        description: 'You must be logged in to make a payment.',
-        variant: 'destructive',
-      });
-      return;
+    if (!firebaseApp) {
+        toast({
+            title: 'Firebase not initialized',
+            description: 'The app is not connected to Firebase services.',
+            variant: 'destructive',
+        });
+        return;
     }
-
+  
     startTransition(async () => {
-      const paymentId = uuidv4();
-      const paymentRef = doc(firestore, 'users', user.uid, 'payments', paymentId);
+      const functions = getFunctions(firebaseApp, 'us-central1');
+      const createPaymentSession = httpsCallable(functions, 'createPaymentSession');
+
       const paymentData = {
-        id: paymentId,
-        userId: user.uid,
-        email: user.email,
+        email: user?.email,
         items: [{ id: 'premium-plan', name: 'AfgAiHub Premium', price: 1000 }],
-        status: 'created',
-        url: `https://api.hesab.com/api/v1/payment/create-session`, // Placeholder URL
-        createdAt: new Date().toISOString(),
+        // Example redirect URLs:
+        // redirectSuccess: 'https://your-app.com/payment-success',
+        // redirectFailure: 'https://your-app.com/payment-failure',
       };
 
       try {
-        await setDoc(paymentRef, paymentData);
-
-        toast({
-          title: 'Payment session created!',
-          description: 'Redirecting to HesabPay...',
-        });
+        const result: any = await createPaymentSession(paymentData);
         
-        // Simulate redirect for now.
-        setTimeout(() => {
-            alert("This would redirect to a payment URL from HesabPay.");
-        }, 1000);
-
+        if (result.data.success && result.data.paymentUrl) {
+          toast({
+            title: 'Payment session created!',
+            description: 'Redirecting to HesabPay...',
+          });
+          // Redirect user to the payment gateway
+          window.location.href = result.data.paymentUrl;
+        } else {
+          throw new Error(result.data.error || 'Failed to get payment URL.');
+        }
       } catch (error: any) {
-        console.error('Payment failed', error);
+        console.error('Payment creation failed', error);
         toast({
           title: 'Payment Failed',
           description: error.message || 'An unexpected error occurred. Please try again.',

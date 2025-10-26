@@ -208,19 +208,19 @@
         "timestamp"
       ]
     },
-    "Payment": {
+    "PaymentSession": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Payment",
+      "title": "PaymentSession",
       "type": "object",
-      "description": "Represents a payment transaction initiated by a user.",
+      "description": "Represents a payment session created with HesabPay.",
       "properties": {
-        "id": {
+        "sessionId": {
           "type": "string",
-          "description": "Unique identifier for the payment document."
+          "description": "Unique identifier for the payment session."
         },
         "userId": {
           "type": "string",
-          "description": "The ID of the user who initiated the payment."
+          "description": "The ID of the user who initiated the payment. Optional for guest checkouts."
         },
         "email": {
           "type": "string",
@@ -232,41 +232,68 @@
           "items": {
             "type": "object",
             "properties": {
-              "id": {
-                "type": "string"
-              },
-              "name": {
-                "type": "string"
-              },
-              "price": {
-                "type": "number"
-              }
+              "id": { "type": "string" },
+              "name": { "type": "string" },
+              "price": { "type": "number" }
             },
             "required": ["id", "name", "price"]
-          },
-          "description": "The items included in the payment."
+          }
         },
         "status": {
           "type": "string",
-          "description": "The status of the payment (e.g., 'created', 'completed', 'failed')."
+          "enum": ["pending", "success", "failed"],
+          "description": "The status of the payment."
         },
-        "url": {
+        "paymentUrl": {
           "type": "string",
           "format": "uri",
           "description": "The HesabPay URL to complete the payment."
         },
+        "guest": {
+          "type": "boolean",
+          "description": "Flag indicating if the payment was made by a guest."
+        },
         "createdAt": {
           "type": "string",
           "format": "date-time",
-          "description": "Timestamp when the payment was created."
-        },
-        "verifiedAt": {
-          "type": "string",
-          "format": "date-time",
-          "description": "Timestamp when the payment was verified by webhook."
+          "description": "Timestamp when the payment session was created."
         }
       },
-      "required": ["id", "userId", "email", "items", "status", "url", "createdAt"]
+      "required": ["sessionId", "items", "status", "paymentUrl", "createdAt"]
+    },
+    "PaymentDistribution": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "PaymentDistribution",
+      "type": "object",
+      "description": "Represents a multi-vendor payment distribution.",
+      "properties": {
+        "txnId": {
+          "type": "string",
+          "description": "Unique identifier for the distribution transaction."
+        },
+        "vendors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "account_number": { "type": "string" },
+              "amount": { "type": "number" }
+            },
+            "required": ["account_number", "amount"]
+          }
+        },
+        "status": {
+          "type": "string",
+          "enum": ["completed", "failed"],
+          "description": "The status of the distribution."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when the distribution was initiated."
+        }
+      },
+      "required": ["txnId", "vendors", "status", "createdAt"]
     }
   },
   "auth": {
@@ -282,159 +309,26 @@
         "path": "/users/{userId}",
         "definition": {
           "entityName": "User",
-          "schema": {
-            "$ref": "#/backend/entities/User"
-          },
-          "description": "Stores user profiles. Each document is keyed by the user's unique Firebase Auth ID.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique ID of the user, matching the Firebase Auth UID."
-            }
-          ]
+          "schema": { "$ref": "#/backend/entities/User" },
+          "description": "Stores user profiles."
         }
       },
       {
-        "path": "/users/{userId}/payments/{paymentId}",
+        "path": "/payments/sessions/{sessionId}",
         "definition": {
-          "entityName": "Payment",
-          "schema": {
-            "$ref": "#/backend/entities/Payment"
-          },
-          "description": "Stores payment records for each user.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique ID of the user."
-            },
-            {
-              "name": "paymentId",
-              "description": "The unique ID for the payment record."
-            }
-          ]
+          "entityName": "PaymentSession",
+          "schema": { "$ref": "#/backend/entities/PaymentSession" },
+          "description": "Stores HesabPay payment session details."
         }
       },
       {
-        "path": "/users/{userId}/quranTutorInteractions/{interactionId}",
+        "path": "/payments/distributions/{txnId}",
         "definition": {
-          "entityName": "QuranTutorInteraction",
-          "schema": {
-            "$ref": "#/backend/entities/QuranTutorInteraction"
-          },
-          "description": "Stores interactions between a user and the QuranTutor AI agent. Includes denormalized 'userId' for authorization independence.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique ID of the user."
-            },
-            {
-              "name": "interactionId",
-              "description": "The unique ID of the interaction."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/doctorAssistantInteractions/{interactionId}",
-        "definition": {
-          "entityName": "DoctorAssistantInteraction",
-          "schema": {
-            "$ref": "#/backend/entities/DoctorAssistantInteraction"
-          },
-          "description": "Stores interactions between a user and the DoctorAssistant AI agent. Includes denormalized 'userId' for authorization independence.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique ID of the user."
-            },
-            {
-              "name": "interactionId",
-              "description": "The unique ID of the interaction."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/realEstateAgentInteractions/{interactionId}",
-        "definition": {
-          "entityName": "RealEstateAgentInteraction",
-          "schema": {
-            "$ref": "#/backend/entities/RealEstateAgentInteraction"
-          },
-          "description": "Stores interactions between a user and the RealEstateAgent AI agent. Includes denormalized 'userId' for authorization independence.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique ID of the user."
-            },
-            {
-              "name": "interactionId",
-              "description": "The unique ID of the interaction."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/appPrototyperInteractions/{interactionId}",
-        "definition": {
-          "entityName": "AppPrototyperInteraction",
-          "schema": {
-            "$ref": "#/backend/entities/AppPrototyperInteraction"
-          },
-          "description": "Stores interactions between a user and the AppPrototyper AI agent. Includes denormalized 'userId' for authorization independence.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique ID of the user."
-            },
-            {
-              "name": "interactionId",
-              "description": "The unique ID of the interaction."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/antiqueAuthenticatorInteractions/{interactionId}",
-        "definition": {
-          "entityName": "AntiqueAuthenticatorInteraction",
-          "schema": {
-            "$ref": "#/backend/entities/AntiqueAuthenticatorInteraction"
-          },
-          "description": "Stores interactions between a user and the AntiqueAuthenticator AI agent. Includes denormalized 'userId' for authorization independence.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique ID of the user."
-            },
-            {
-              "name": "interactionId",
-              "description": "The unique ID of the interaction."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/paymentTransactions/{transactionId}",
-        "definition": {
-          "entityName": "Payment",
-          "schema": {
-            "$ref": "#/backend/entities/Payment"
-          },
-          "description": "Stores payment transactions made by the user. Includes denormalized 'userId' for authorization independence.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique ID of the user."
-            },
-            {
-              "name": "transactionId",
-              "description": "The unique ID of the transaction."
-            }
-          ]
+          "entityName": "PaymentDistribution",
+          "schema": { "$ref": "#/backend/entities/PaymentDistribution" },
+          "description": "Logs multi-vendor payment distribution transactions."
         }
       }
-    ],
-    "reasoning": "The Firestore structure is designed to be secure, scalable, and easily debuggable, following the core design principles and strategy mandates. It avoids hierarchical authorization dependencies by denormalizing authorization data, ensuring each document contains all the necessary information for access control. The structure segregates data based on access needs and employs consistent access modeling patterns for clarity and predictability.  It uses path-based ownership for user-specific data and a membership map when collaboration is needed.\n\n**Authorization Independence:** User interactions with each AI agent are stored as subcollections under the `/users/{userId}` path. Each interaction document (`QuranTutorInteraction`, `DoctorAssistantInteraction`, etc.) includes the `userId`, effectively denormalizing the user-agent relationship. This eliminates the need for `get()` calls in security rules to verify user ownership.\n\n**Structural Segregation:** Each type of agent interaction is stored in its own subcollection. This allows you to define specific security rules tailored to the data within each collection, ensuring that rules are not overly permissive to accommodate diverse data types.\n\n**Access Modeling:** The structure utilizes path-based ownership (`/users/{userId}/...`) for all agent interactions. This simplifies security rules by directly associating data with the user who owns it.\n\n**QAPs (Rules are not Filters):** The path-based ownership structure enables efficient and secure `list` operations. You can easily list all interactions for a specific user without needing to filter based on the `userId` within the documents themselves.\n\n**Invariants:** The structure supports the integrity of ownership, timestamps, and denormalized data. The `userId` field in each interaction document ensures that the ownership invariant is maintained. Timestamps (`createdAt`) are directly stored in the user document and in interaction documents."
+    ]
   }
 }
