@@ -2,12 +2,11 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useFirebase } from '@/firebase';
-import { getFunctions, httpsCallable } from 'firebase/functions';
 import { useToast } from '@/hooks/use-toast';
 import { doc, updateDoc, Firestore } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
-import { processPaymentAction } from '@/app/actions/payment-actions';
+import { createPaymentSessionAction, processPaymentAction } from '@/app/actions/payment-actions';
 
 type Item = {
   id: string;
@@ -49,24 +48,11 @@ const updateFirestorePayment = (
 };
 
 export function usePayment() {
-  const { firebaseApp, firestore, user } = useFirebase();
+  const { firestore, user } = useFirebase();
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
-    let currentSessionId: string | null = null;
-    let paymentData: PaymentData | null = null;
-    
-    try {
-      currentSessionId = sessionStorage.getItem('paymentSessionId');
-      const storedPaymentData = sessionStorage.getItem('paymentData');
-      if (storedPaymentData) {
-        paymentData = JSON.parse(storedPaymentData);
-      }
-    } catch (e) {
-      console.warn('Session storage is not available.');
-    }
-
     const handler = (event: MessageEvent) => {
       // It's good practice to check the origin for security
       if (
@@ -75,6 +61,18 @@ export function usePayment() {
       ) {
         console.log('Payment Success Event Received:', event.data);
         const { success } = event.data;
+
+        let currentSessionId: string | null = null;
+        let paymentData: PaymentData | null = null;
+        try {
+          currentSessionId = sessionStorage.getItem('paymentSessionId');
+          const storedPaymentData = sessionStorage.getItem('paymentData');
+          if (storedPaymentData) {
+            paymentData = JSON.parse(storedPaymentData);
+          }
+        } catch (e) {
+          console.warn('Session storage is not available.');
+        }
 
         if (success && currentSessionId) {
           toast({
@@ -93,14 +91,11 @@ export function usePayment() {
               totalAmount,
             }).then(result => {
               console.log('AI Summary:', result.summary);
+               toast({
+                title: 'Transaction Summary',
+                description: result.summary,
+              });
             });
-          }
-
-          try {
-            sessionStorage.removeItem('paymentSessionId');
-            sessionStorage.removeItem('paymentData');
-          } catch(e) {
-             console.warn('Session storage is not available.');
           }
 
         } else {
@@ -111,13 +106,15 @@ export function usePayment() {
             })
              if(currentSessionId) {
                 updateFirestorePayment(firestore, currentSessionId, 'failed');
-                 try {
-                    sessionStorage.removeItem('paymentSessionId');
-                    sessionStorage.removeItem('paymentData');
-                 } catch(e) {
-                    console.warn('Session storage is not available.');
-                 }
              }
+        }
+
+        // Always clear session storage after handling the event
+        try {
+          sessionStorage.removeItem('paymentSessionId');
+          sessionStorage.removeItem('paymentData');
+        } catch(e) {
+           console.warn('Session storage is not available.');
         }
       }
     };
@@ -131,55 +128,40 @@ export function usePayment() {
 
   const createPaymentSession = useCallback(
     async (paymentData: PaymentData) => {
-      if (!firebaseApp) {
-        setError('Firebase not initialized.');
-        toast({
-          title: 'Error',
-          description: 'The app is not connected to Firebase services.',
-          variant: 'destructive',
-        });
-        return;
-      }
       setError(null);
+      
+      const result = await createPaymentSessionAction({
+          ...paymentData,
+          // Ensure email is included, falling back to the logged-in user's email
+          email: paymentData.email || user?.email,
+      });
 
-      const functions = getFunctions(firebaseApp, 'us-central1');
-      const createSession = httpsCallable(functions, 'createPaymentSession');
-
-      try {
-        const result: any = await createSession({
-            ...paymentData,
-            email: paymentData.email || user?.email,
+      if (result.success && result.paymentUrl) {
+        toast({
+          title: 'Payment session created!',
+          description: 'Redirecting to HesabPay...',
         });
-
-        if (result.data.success && result.data.paymentUrl) {
-          toast({
-            title: 'Payment session created!',
-            description: 'Redirecting to HesabPay...',
-          });
-          
-          try {
-             sessionStorage.setItem('paymentSessionId', result.data.sessionId);
-             sessionStorage.setItem('paymentData', JSON.stringify(paymentData));
-          } catch(e) {
-             console.warn('Session storage is not available.');
-          }
-
-          window.location.href = result.data.paymentUrl;
-        } else {
-          throw new Error(result.data.error || 'Failed to get payment URL.');
+        
+        try {
+           sessionStorage.setItem('paymentSessionId', result.sessionId);
+           sessionStorage.setItem('paymentData', JSON.stringify(paymentData));
+        } catch(e) {
+           console.warn('Session storage is not available.');
         }
-      } catch (error: any) {
-        console.error('Payment creation failed', error);
-        setError(error.message || 'An unexpected error occurred.');
+
+        window.location.href = result.paymentUrl;
+      } else {
+        const errorMessage = result.error || 'An unexpected error occurred.';
+        console.error('Payment creation failed', errorMessage);
+        setError(errorMessage);
         toast({
           title: 'Payment Failed',
-          description:
-            error.message || 'An unexpected error occurred. Please try again.',
+          description: errorMessage,
           variant: 'destructive',
         });
       }
     },
-    [firebaseApp, toast, user]
+    [toast, user]
   );
 
   return { createPaymentSession, error };

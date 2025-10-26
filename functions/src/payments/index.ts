@@ -13,7 +13,7 @@ if (!getApps().length) {
 
 const db = getFirestore();
 
-// Environment secrets and variables
+// Environment secrets and variables from .env
 const hesabpayApiKey = defineString('HESABPAY_API_KEY');
 const hesabpayApiUrl = defineString('HESABPAY_BASE_URL');
 const hesabpaySandboxUrl = defineString('HESABPAY_SANDBOX_URL');
@@ -26,9 +26,16 @@ export const createPaymentSession = onCall(async (request) => {
   const { items, email, redirectSuccess, redirectFailure } = request.data;
   const userId = request.auth?.uid;
 
+  // Improved input validation
   if (!items || !Array.isArray(items) || items.length === 0) {
     throw new HttpsError('invalid-argument', 'The function must be called with a non-empty "items" array.');
   }
+  for (const item of items) {
+    if (typeof item.name !== 'string' || typeof item.price !== 'number' || typeof item.id !== 'string') {
+        throw new HttpsError('invalid-argument', 'Each item must have a string id, a string name, and a numeric price.');
+    }
+  }
+
 
   const apiKey = hesabpayApiKey.value();
   const baseUrl = hesabpayApiUrl.value();
@@ -63,7 +70,8 @@ export const createPaymentSession = onCall(async (request) => {
       paymentUrl,
       createdAt: new Date().toISOString(),
     };
-
+    
+    // Storing session in a structured path
     await db.collection('payments').doc('sessions').collection(sessionId).doc(sessionId).set(sessionData);
 
     return { success: true, paymentUrl, sessionId };

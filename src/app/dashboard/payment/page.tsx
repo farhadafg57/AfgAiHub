@@ -17,16 +17,22 @@ import { useUser } from '@/firebase';
 export default function PaymentPage() {
   const { user } = useUser();
   const [isPending, startTransition] = useTransition();
+  // The hook now encapsulates all the complex logic.
   const { createPaymentSession, error } = usePayment();
 
   const handleUpgrade = () => {
     startTransition(async () => {
+      if (!user?.email) {
+        // In a real app, you'd handle this more gracefully.
+        alert("User email is not available.");
+        return;
+      }
       const paymentData = {
-        email: user?.email,
+        email: user.email,
         items: [{ id: 'premium-plan', name: 'AfgAiHub Premium', price: 1000 }],
-        // Example redirect URLs:
-        // redirectSuccess: 'https://your-app.com/payment-success',
-        // redirectFailure: 'https://your-app.com/payment-failure',
+        // Example redirect URLs can be passed here if needed
+        // redirectSuccess: `${window.location.origin}/payment-success`,
+        // redirectFailure: `${window.location.origin}/payment-failure`,
       };
       await createPaymentSession(paymentData);
     });
