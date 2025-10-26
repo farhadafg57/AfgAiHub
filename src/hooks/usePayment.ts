@@ -2,11 +2,12 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useFirebase } from '@/firebase';
-import { getFunctions, httpsCallable, Functions } from 'firebase/functions';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 import { useToast } from '@/hooks/use-toast';
 import { doc, updateDoc, Firestore } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { processPaymentAction } from '@/app/actions/payment-actions';
 
 type Item = {
   id: string;
@@ -54,10 +55,14 @@ export function usePayment() {
 
   useEffect(() => {
     let currentSessionId: string | null = null;
+    let paymentData: PaymentData | null = null;
     
-    // Store the session ID from storage when the hook mounts
     try {
       currentSessionId = sessionStorage.getItem('paymentSessionId');
+      const storedPaymentData = sessionStorage.getItem('paymentData');
+      if (storedPaymentData) {
+        paymentData = JSON.parse(storedPaymentData);
+      }
     } catch (e) {
       console.warn('Session storage is not available.');
     }
@@ -77,7 +82,27 @@ export function usePayment() {
             description: 'Your payment has been confirmed.',
           });
           updateFirestorePayment(firestore, currentSessionId, 'success');
-          sessionStorage.removeItem('paymentSessionId'); // Clean up
+          
+          if(paymentData){
+            const totalAmount = paymentData.items.reduce((sum, item) => sum + item.price, 0);
+            processPaymentAction({
+              sessionId: currentSessionId,
+              userId: user?.uid,
+              email: user?.email || paymentData.email,
+              items: paymentData.items,
+              totalAmount,
+            }).then(result => {
+              console.log('AI Summary:', result.summary);
+            });
+          }
+
+          try {
+            sessionStorage.removeItem('paymentSessionId');
+            sessionStorage.removeItem('paymentData');
+          } catch(e) {
+             console.warn('Session storage is not available.');
+          }
+
         } else {
             toast({
                 title: 'Payment Failed',
@@ -86,7 +111,12 @@ export function usePayment() {
             })
              if(currentSessionId) {
                 updateFirestorePayment(firestore, currentSessionId, 'failed');
-                sessionStorage.removeItem('paymentSessionId'); // Clean up
+                 try {
+                    sessionStorage.removeItem('paymentSessionId');
+                    sessionStorage.removeItem('paymentData');
+                 } catch(e) {
+                    console.warn('Session storage is not available.');
+                 }
              }
         }
       }
@@ -97,7 +127,7 @@ export function usePayment() {
     return () => {
       window.removeEventListener('message', handler);
     };
-  }, [firestore, toast]);
+  }, [firestore, toast, user]);
 
   const createPaymentSession = useCallback(
     async (paymentData: PaymentData) => {
@@ -116,7 +146,10 @@ export function usePayment() {
       const createSession = httpsCallable(functions, 'createPaymentSession');
 
       try {
-        const result: any = await createSession(paymentData);
+        const result: any = await createSession({
+            ...paymentData,
+            email: paymentData.email || user?.email,
+        });
 
         if (result.data.success && result.data.paymentUrl) {
           toast({
@@ -124,14 +157,13 @@ export function usePayment() {
             description: 'Redirecting to HesabPay...',
           });
           
-          // Store session ID to be used by the event listener
           try {
              sessionStorage.setItem('paymentSessionId', result.data.sessionId);
+             sessionStorage.setItem('paymentData', JSON.stringify(paymentData));
           } catch(e) {
              console.warn('Session storage is not available.');
           }
 
-          // Redirect user to the payment gateway
           window.location.href = result.data.paymentUrl;
         } else {
           throw new Error(result.data.error || 'Failed to get payment URL.');
@@ -147,7 +179,7 @@ export function usePayment() {
         });
       }
     },
-    [firebaseApp, toast]
+    [firebaseApp, toast, user]
   );
 
   return { createPaymentSession, error };
