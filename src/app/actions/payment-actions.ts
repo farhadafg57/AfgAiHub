@@ -1,6 +1,13 @@
 'use server';
 import { getFunctions, httpsCallable } from 'firebase-admin/functions';
-import { getApp } from 'firebase-admin/app';
+import admin from 'firebase-admin';
+
+// Ensure the admin app is initialized
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.applicationDefault(),
+  });
+}
 
 type PaymentItem = {
   name: string;
@@ -23,9 +30,7 @@ export async function createPaymentSessionAction(
   input: CreatePaymentSessionInput
 ): Promise<CreatePaymentSessionOutput> {
   try {
-    // Ensure the admin app is initialized (it should be by default in Cloud Functions environment)
-    const adminApp = getApp();
-    const functions = getFunctions(adminApp);
+    const functions = getFunctions(admin.app());
     const createPaymentSession = httpsCallable(functions, 'createPaymentSession');
     
     const result = await createPaymentSession(input);
@@ -33,7 +38,6 @@ export async function createPaymentSessionAction(
     return result.data as CreatePaymentSessionOutput;
   } catch (error: any) {
     console.error('Error calling createPaymentSession function:', error);
-    // Functions V2 onCall errors have a different structure
     const errorMessage = error.details?.message || error.message || 'An unknown error occurred.';
     return { success: false, error: errorMessage };
   }
