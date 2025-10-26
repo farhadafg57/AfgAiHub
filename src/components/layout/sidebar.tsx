@@ -32,22 +32,20 @@ export function AppSidebar() {
         <SidebarMenu>
           {navigationLinks.map((link) => (
             <SidebarMenuItem key={link.name}>
-              <Link href={link.href} legacyBehavior passHref>
-                <SidebarMenuButton
-                  asChild
-                  isActive={pathname === link.href}
-                  tooltip={link.name}
-                  className={cn(
-                    'justify-start',
-                    pathname === link.href && 'bg-sidebar-accent'
-                  )}
-                >
-                  <a>
-                    <link.icon className="h-4 w-4" />
-                    <span>{link.name}</span>
-                  </a>
-                </SidebarMenuButton>
-              </Link>
+              <SidebarMenuButton
+                asChild
+                isActive={pathname === link.href}
+                tooltip={link.name}
+                className={cn(
+                  'justify-start',
+                  pathname === link.href && 'bg-sidebar-accent'
+                )}
+              >
+                <Link href={link.href}>
+                  <link.icon className="h-4 w-4" />
+                  <span>{link.name}</span>
+                </Link>
+              </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
         </SidebarMenu>
