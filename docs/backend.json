@@ -417,9 +417,9 @@
       {
         "path": "/users/{userId}/paymentTransactions/{transactionId}",
         "definition": {
-          "entityName": "PaymentTransaction",
+          "entityName": "Payment",
           "schema": {
-            "$ref": "#/backend/entities/PaymentTransaction"
+            "$ref": "#/backend/entities/Payment"
           },
           "description": "Stores payment transactions made by the user. Includes denormalized 'userId' for authorization independence.",
           "params": [
