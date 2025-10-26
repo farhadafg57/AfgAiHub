@@ -3,9 +3,9 @@ import { getFunctions, httpsCallable } from 'firebase/functions';
 import { initializeFirebase } from '@/firebase';
 
 type PaymentItem = {
+  id: string;
   name: string;
   price: number;
-  quantity: number;
 };
 
 type CreatePaymentSessionInput = {
@@ -30,7 +30,14 @@ export async function createPaymentSessionAction(
     
     const result = await createPaymentSession(input);
     
-    return result.data as CreatePaymentSessionOutput;
+    const data = result.data as { success: boolean, paymentUrl?: string, error?: string };
+
+    if (data.success) {
+      return { success: true, paymentUrl: data.paymentUrl };
+    } else {
+      return { success: false, error: data.error || 'An unknown error occurred in the cloud function.' };
+    }
+    
   } catch (error: any) {
     console.error('Error calling createPaymentSession function:', error);
     // The error object from a callable function has a 'message' and 'details' property
