@@ -5,12 +5,12 @@ import { Header } from '@/components/layout/header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { createPaymentSessionAction } from '@/app/actions/payment-actions';
 import { useFirebase } from '@/firebase';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 import { Loader2 } from 'lucide-react';
 
 export default function PaymentPage() {
-  const { user } = useFirebase();
+  const { user, firebaseApp } = useFirebase();
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
 
@@ -26,13 +26,19 @@ export default function PaymentPage() {
 
     startTransition(async () => {
       try {
+        const functions = getFunctions(firebaseApp);
+        const createPaymentSession = httpsCallable(functions, 'createPaymentSession');
+        
         const items = [{ id: 'premium-plan', name: 'AfgAiHub Premium', price: 1000 }];
-        const result = await createPaymentSessionAction({ items, email: user.email! });
+        
+        const result = await createPaymentSession({ items, email: user.email! });
+        
+        const data = result.data as { success: boolean; paymentUrl?: string; error?: string };
 
-        if (result.success && result.paymentUrl) {
-          window.location.href = result.paymentUrl;
+        if (data.success && data.paymentUrl) {
+          window.location.href = data.paymentUrl;
         } else {
-          throw new Error(result.error || 'Failed to create payment session.');
+          throw new Error(data.error || 'Failed to create payment session.');
         }
       } catch (error: any) {
         console.error('Payment failed', error);
