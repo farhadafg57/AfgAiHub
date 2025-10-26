@@ -36,7 +36,6 @@ export function initializeFirebase() {
 
 export function getSdks(firebaseApp: FirebaseApp) {
   const functions = getFunctions(firebaseApp);
-  // connectFunctionsEmulator(functions, 'localhost', 5001); // Uncomment for local development
   return {
     firebaseApp,
     auth: getAuth(firebaseApp),

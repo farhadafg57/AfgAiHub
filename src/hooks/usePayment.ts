@@ -7,7 +7,7 @@ import { doc, updateDoc, Firestore } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { getFunctions, httpsCallable, Functions } from 'firebase/functions';
-// Removed processPaymentAction import as it will be handled differently now
+import { processPayment } from '@/app/actions/payment-actions';
 
 type Item = {
   id: string;
@@ -39,16 +39,8 @@ const updateFirestorePayment = (
         requestResourceData: { status },
       })
     );
-    console.error('Failed to update payment status:', error);
   });
 };
-
-async function processPayment(input: any) {
-  // This is a placeholder for the Genkit flow call which should be a server action.
-  // For now, we'll just log it. A proper implementation needs a separate server action.
-  console.log('AI Processing for payment would be triggered here:', input);
-  return { summary: `Transaction for session ${input.sessionId} processed.` };
-}
 
 export function usePayment() {
   const { firestore, user, functions } = useFirebase();
