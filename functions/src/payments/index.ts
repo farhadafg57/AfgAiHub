@@ -180,14 +180,21 @@ export const hesabWebhook = onRequest({ secrets: [hesabpayWebhookSecret] }, asyn
           
           if (userId) {
             const subscriptionPlan = plan || sessionData?.plan || 'basic';
-            await db.collection('users').doc(userId).set({
+            const userRef = db.collection('users').doc(userId);
+            const userDoc = await userRef.get();
+            const existingData = userDoc.data();
+            
+            // Only update subscription, preserve other user data
+            await userRef.set({
+              ...existingData,
               subscription: {
+                ...(existingData?.subscription || {}),
                 status: 'active',
                 plan: subscriptionPlan,
                 activatedAt: new Date(),
                 transactionId: transaction_id,
               }
-            }, { merge: true });
+            });
             
             console.log(`Subscription granted to user ${userId} with plan ${subscriptionPlan}`);
           }
