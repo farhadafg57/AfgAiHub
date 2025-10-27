@@ -176,7 +176,11 @@ export const hesabWebhook = onRequest({ secrets: [hesabpayWebhookSecret] }, asyn
             
             if (userId) {
               const userRef = db.collection('users').doc(userId);
-              const subscriptionPlan = plan || sessionData?.items?.[0]?.plan || 'basic';
+              // Extract plan from webhook, session items, or default to 'basic'
+              let subscriptionPlan = plan || 'basic';
+              if (!plan && sessionData?.items && Array.isArray(sessionData.items) && sessionData.items.length > 0) {
+                subscriptionPlan = sessionData.items[0]?.plan || 'basic';
+              }
               
               t.set(userRef.collection('subscription').doc('current'), {
                 status: 'active',
