@@ -5,6 +5,7 @@ import { useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import Link from 'next/link';
 import {
   CareerAdviceInput,
   CareerAdviceOutput,
@@ -28,7 +29,7 @@ import {
 } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
-import { Briefcase, Link as LinkIcon, Lightbulb } from 'lucide-react';
+import { Briefcase, Link as LinkIcon, Lightbulb, HelpCircle } from 'lucide-react';
 import { Skeleton } from '../ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { getCareerAdviceAction } from '@/app/actions/career-coach-actions';
@@ -71,11 +72,19 @@ export default function CareerCoach() {
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader>
-          <CardTitle className="font-headline">Career Coach</CardTitle>
-          <CardDescription>
-            Define your career goals and paste your resume/experience to get personalized advice.
-          </CardDescription>
+        <CardHeader className="flex flex-row items-start justify-between">
+          <div>
+            <CardTitle className="font-headline">Career Coach</CardTitle>
+            <CardDescription>
+              Define your career goals and paste your resume/experience to get personalized advice.
+            </CardDescription>
+          </div>
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/dashboard/how-to-use/career-coach">
+              <HelpCircle className="mr-2 h-4 w-4" />
+              How to Use
+            </Link>
+          </Button>
         </CardHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>

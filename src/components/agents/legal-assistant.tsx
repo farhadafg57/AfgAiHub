@@ -5,6 +5,7 @@ import { useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import Link from 'next/link';
 import {
   LegalInformationInput,
   LegalInformationOutput,
@@ -28,7 +29,7 @@ import {
 } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertTriangle, Scale } from 'lucide-react';
+import { AlertTriangle, Scale, HelpCircle } from 'lucide-react';
 import { Skeleton } from '../ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { getLegalInfoAction } from '@/app/actions/legal-assistant-actions';
@@ -69,11 +70,19 @@ export default function LegalAssistant() {
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader>
-          <CardTitle className="font-headline">Legal Assistant</CardTitle>
-          <CardDescription>
-            Ask a legal question or describe a situation to get preliminary, general information.
-          </CardDescription>
+        <CardHeader className="flex flex-row items-start justify-between">
+          <div>
+            <CardTitle className="font-headline">Legal Assistant</CardTitle>
+            <CardDescription>
+              Ask a legal question or describe a situation to get preliminary, general information.
+            </CardDescription>
+          </div>
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/dashboard/how-to-use/legal-assistant">
+              <HelpCircle className="mr-2 h-4 w-4" />
+              How to Use
+            </Link>
+          </Button>
         </CardHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>

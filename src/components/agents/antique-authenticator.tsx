@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import Image from 'next/image';
+import Link from 'next/link';
 import {
   AuthenticateAntiqueInput,
   AuthenticateAntiqueOutput,
@@ -28,7 +29,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Gem, Upload, DollarSign, Key, Microscope } from 'lucide-react';
+import { Gem, Upload, DollarSign, Key, Microscope, HelpCircle } from 'lucide-react';
 import { Skeleton } from '../ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { authenticateAction } from '@/app/actions/antique-authenticator-actions';
@@ -87,11 +88,19 @@ export default function AntiqueAuthenticator() {
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader>
-          <CardTitle className="font-headline">Antique Authenticator</CardTitle>
-          <CardDescription>
-            Upload a photo of your antique and provide any details to get an AI-powered authentication analysis.
-          </CardDescription>
+        <CardHeader className="flex flex-row items-start justify-between">
+          <div>
+            <CardTitle className="font-headline">Antique Authenticator</CardTitle>
+            <CardDescription>
+              Upload a photo of your antique and provide any details to get an AI-powered authentication analysis.
+            </CardDescription>
+          </div>
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/dashboard/how-to-use/antique-authenticator">
+              <HelpCircle className="mr-2 h-4 w-4" />
+              How to Use
+            </Link>
+          </Button>
         </CardHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>

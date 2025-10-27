@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import Link from 'next/link';
 import {
   GetPropertyInformationInput,
   GetPropertyInformationOutput,
@@ -27,7 +28,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Home } from 'lucide-react';
+import { Home, HelpCircle } from 'lucide-react';
 import { Skeleton } from '../ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { getPropertyInfoAction } from '@/app/actions/real-estate-agent-actions';
@@ -70,12 +71,20 @@ export default function RealEstateAgent() {
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader>
-          <CardTitle className="font-headline">Property Assistant</CardTitle>
-          <CardDescription>
-            Enter a property address and your question to get detailed
-            information.
-          </CardDescription>
+        <CardHeader className="flex flex-row items-start justify-between">
+          <div>
+            <CardTitle className="font-headline">Property Assistant</CardTitle>
+            <CardDescription>
+              Enter a property address and your question to get detailed
+              information.
+            </CardDescription>
+          </div>
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/dashboard/how-to-use/real-estate-agent">
+              <HelpCircle className="mr-2 h-4 w-4" />
+              How to Use
+            </Link>
+          </Button>
         </CardHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>

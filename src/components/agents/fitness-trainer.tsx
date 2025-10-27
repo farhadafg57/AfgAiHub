@@ -5,6 +5,7 @@ import { useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import Link from 'next/link';
 import {
   FitnessPlanInput,
   FitnessPlanOutput,
@@ -35,7 +36,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
-import { HeartPulse, Dumbbell, Apple } from 'lucide-react';
+import { HeartPulse, Dumbbell, Apple, HelpCircle } from 'lucide-react';
 import { Skeleton } from '../ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { getFitnessPlanAction } from '@/app/actions/fitness-trainer-actions';
@@ -84,11 +85,19 @@ export default function FitnessTrainer() {
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader>
-          <CardTitle className="font-headline">AI Fitness Trainer</CardTitle>
-          <CardDescription>
-            Get a personalized workout and diet plan based on your goals and fitness level.
-          </CardDescription>
+        <CardHeader className="flex flex-row items-start justify-between">
+          <div>
+            <CardTitle className="font-headline">AI Fitness Trainer</CardTitle>
+            <CardDescription>
+              Get a personalized workout and diet plan based on your goals and fitness level.
+            </CardDescription>
+          </div>
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/dashboard/how-to-use/fitness-trainer">
+              <HelpCircle className="mr-2 h-4 w-4" />
+              How to Use
+            </Link>
+          </Button>
         </CardHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>

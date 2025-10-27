@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import Link from 'next/link';
 import {
   PreliminaryMedicalInformationInput,
   PreliminaryMedicalInformationOutput,
@@ -27,7 +28,7 @@ import {
 } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertTriangle, Stethoscope } from 'lucide-react';
+import { AlertTriangle, Stethoscope, HelpCircle } from 'lucide-react';
 import { Skeleton } from '../ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { getMedicalInfoAction } from '@/app/actions/doctor-assistant-actions';
@@ -68,12 +69,20 @@ export default function DoctorAssistant() {
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader>
-          <CardTitle className="font-headline">Symptom Checker</CardTitle>
-          <CardDescription>
-            Describe your symptoms, and the AI will provide preliminary
-            information and suggestions.
-          </CardDescription>
+        <CardHeader className="flex flex-row items-start justify-between">
+          <div>
+            <CardTitle className="font-headline">Symptom Checker</CardTitle>
+            <CardDescription>
+              Describe your symptoms, and the AI will provide preliminary
+              information and suggestions.
+            </CardDescription>
+          </div>
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/dashboard/how-to-use/doctor-assistant">
+              <HelpCircle className="mr-2 h-4 w-4" />
+              How to Use
+            </Link>
+          </Button>
         </CardHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>

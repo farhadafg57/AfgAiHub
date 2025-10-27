@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import Link from 'next/link';
 import {
   AppPrototyperInput,
   AppPrototyperOutput,
@@ -26,7 +27,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
-import { AppWindow, Copy, Check } from 'lucide-react';
+import { AppWindow, Copy, Check, HelpCircle } from 'lucide-react';
 import { Skeleton } from '../ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { getAppCodeAction } from '@/app/actions/app-prototyper-actions';
@@ -76,12 +77,20 @@ export default function AppPrototyper() {
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader>
-          <CardTitle className="font-headline">App Prototyper</CardTitle>
-          <CardDescription>
-            Describe the app you want to build, and the AI will generate initial
-            code snippets to get you started.
-          </CardDescription>
+        <CardHeader className="flex flex-row items-start justify-between">
+          <div>
+            <CardTitle className="font-headline">App Prototyper</CardTitle>
+            <CardDescription>
+              Describe the app you want to build, and the AI will generate initial
+              code snippets to get you started.
+            </CardDescription>
+          </div>
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/dashboard/how-to-use/app-prototyper">
+              <HelpCircle className="mr-2 h-4 w-4" />
+              How to Use
+            </Link>
+          </Button>
         </CardHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>

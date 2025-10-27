@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import Link from 'next/link';
 import {
   QuranicGuidanceInput,
   QuranicGuidanceOutput,
@@ -27,7 +28,7 @@ import {
 } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '../ui/skeleton';
-import { BookOpen } from 'lucide-react';
+import { BookOpen, HelpCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { getGuidanceAction } from '@/app/actions/quran-tutor-actions';
 
@@ -67,12 +68,20 @@ export default function QuranTutor() {
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader>
-          <CardTitle className="font-headline">Ask the Quran</CardTitle>
-          <CardDescription>
-            Enter your question or the topic you seek guidance on, and the AI
-            will provide insights from the Quran.
-          </CardDescription>
+        <CardHeader className="flex flex-row items-start justify-between">
+          <div>
+            <CardTitle className="font-headline">Ask the Quran</CardTitle>
+            <CardDescription>
+              Enter your question or the topic you seek guidance on, and the AI
+              will provide insights from the Quran.
+            </CardDescription>
+          </div>
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/dashboard/how-to-use/quran-tutor">
+              <HelpCircle className="mr-2 h-4 w-4" />
+              How to Use
+            </Link>
+          </Button>
         </CardHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>

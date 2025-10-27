@@ -5,6 +5,7 @@ import { useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import Link from 'next/link';
 import {
   TravelItineraryInput,
   TravelItineraryOutput,
@@ -34,7 +35,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plane, Map, Backpack } from 'lucide-react';
+import { Plane, Map, Backpack, HelpCircle } from 'lucide-react';
 import { Skeleton } from '../ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { getTravelItineraryAction } from '@/app/actions/travel-planner-actions';
@@ -81,11 +82,19 @@ export default function TravelPlanner() {
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader>
-          <CardTitle className="font-headline">Travel Planner</CardTitle>
-          <CardDescription>
-            Plan your next adventure. Tell us where you want to go, and we'll create a custom itinerary.
-          </CardDescription>
+        <CardHeader className="flex flex-row items-start justify-between">
+          <div>
+            <CardTitle className="font-headline">Travel Planner</CardTitle>
+            <CardDescription>
+              Plan your next adventure. Tell us where you want to go, and we'll create a custom itinerary.
+            </CardDescription>
+          </div>
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/dashboard/how-to-use/travel-planner">
+              <HelpCircle className="mr-2 h-4 w-4" />
+              How to Use
+            </Link>
+          </Button>
         </CardHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>

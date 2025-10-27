@@ -5,6 +5,7 @@ import { useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import Link from 'next/link';
 import {
   ContentCreatorInput,
   ContentCreatorOutput,
@@ -34,7 +35,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { PenSquare, Lightbulb, FileText } from 'lucide-react';
+import { PenSquare, Lightbulb, FileText, HelpCircle } from 'lucide-react';
 import { Skeleton } from '../ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { getContentIdeasAction } from '@/app/actions/content-creator-actions';
@@ -79,11 +80,19 @@ export default function ContentCreator() {
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader>
-          <CardTitle className="font-headline">Content Creator Assistant</CardTitle>
-          <CardDescription>
-            Generate ideas and drafts for your next piece of content.
-          </CardDescription>
+        <CardHeader className="flex flex-row items-start justify-between">
+          <div>
+            <CardTitle className="font-headline">Content Creator Assistant</CardTitle>
+            <CardDescription>
+              Generate ideas and drafts for your next piece of content.
+            </CardDescription>
+          </div>
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/dashboard/how-to-use/content-creator">
+              <HelpCircle className="mr-2 h-4 w-4" />
+              How to Use
+            </Link>
+          </Button>
         </CardHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
