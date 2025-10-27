@@ -38,12 +38,14 @@ import { Plane, Map, Backpack, HelpCircle } from 'lucide-react';
 import { Skeleton } from '../ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { getTravelItineraryAction } from '@/app/actions/travel-planner-actions';
+import { Textarea } from '../ui/textarea';
 
 const formSchema = z.object({
   destination: z.string().min(2, 'Please enter a valid destination.'),
   duration: z.string().min(2, 'Please enter a trip duration.'),
   interests: z.string().min(5, 'Please list at least one interest.'),
   budget: z.enum(['budget', 'mid-range', 'luxury']),
+  notes: z.string().optional(),
 });
 
 export default function TravelPlanner() {
@@ -58,6 +60,7 @@ export default function TravelPlanner() {
       duration: '7 days',
       interests: '',
       budget: 'mid-range',
+      notes: '',
     },
   });
 
@@ -159,6 +162,19 @@ export default function TravelPlanner() {
                   </FormItem>
                 )}
               />
+               <FormField
+                control={form.control}
+                name="notes"
+                render={({ field }) => (
+                  <FormItem className="md:col-span-2">
+                    <FormLabel>Additional Notes</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="e.g., 'Traveling with two young children' or 'Prefer to avoid crowded tourist traps'" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </CardContent>
             <CardFooter>
               <Button type="submit" disabled={isPending}>
@@ -198,7 +214,7 @@ export default function TravelPlanner() {
                 <Map className="h-5 w-5 text-muted-foreground"/>
                 <h3 className="text-lg font-semibold font-headline">Day-by-Day Itinerary</h3>
               </div>
-              <p className="whitespace-pre-wrap text-muted-foreground">{result.itinerary}</p>
+              <p className="whitespace-pre-wrap text-muted-foreground prose prose-sm dark:prose-invert max-w-none">{result.itinerary}</p>
             </div>
              <div>
               <div className="flex items-center gap-2 mb-2">

@@ -12,14 +12,15 @@ if (!getApps().length) {
 
 const db = getFirestore();
 
-// Define Firebase environment variables
 const hesabpayApiKey = defineSecret('HESABPAY_KEY');
 const hesabpayWebhookSecret = defineSecret('HESABPAY_WEBHOOK_SECRET');
-const hesabpayBaseUrl = defineString('HESABPAY_BASE_URL', { default: 'https://api.hesab.com/api/v1' });
+const hesabpayBaseUrl = defineString(
+  'HESABPAY_BASE_URL',
+  { default: 'https://api.hesab.com/api/v1' }
+);
 const merchantPin = defineSecret('MERCHANT_PIN');
 
-// --- Helper for PIN Encryption (AES-256-CBC) ---
-export function encryptPin(pin: string, key: string): string {
+function encryptPin(pin: string, key: string): string {
   const secretKey = key.substring(0, 32).padEnd(32, '\0');
   const iv = crypto.randomBytes(16);
   const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(secretKey), iv);
@@ -28,13 +29,6 @@ export function encryptPin(pin: string, key: string): string {
   return Buffer.from(iv.toString('hex') + encrypted, 'utf8').toString('base64');
 }
 
-export function computeHmacHex(raw: string, secret: string): string {
-  const hmac = crypto.createHmac('sha256', secret);
-  hmac.update(raw);
-  return hmac.digest('hex');
-}
-
-// --- 1. Create Payment Session ---
 export const createPaymentSession = onCall(async (request) => {
   const { items, email, successUrl, failUrl } = request.data;
   const uid = request.auth?.uid;
@@ -105,8 +99,6 @@ export const createPaymentSession = onCall(async (request) => {
   }
 });
 
-
-// --- 2. HesabPay Webhook Handler ---
 export const hesabWebhook = onRequest({ secrets: [hesabpayWebhookSecret] }, async (req, res) => {
   if (req.method !== 'POST') {
     res.status(405).send('Method Not Allowed');
@@ -121,11 +113,8 @@ export const hesabWebhook = onRequest({ secrets: [hesabpayWebhookSecret] }, asyn
     res.status(400).send('Missing signature header.');
     return;
   }
-
-  // Verify signature using HMAC SHA256.
-  // Prefer using the raw request body when available (more reliable for signature checks),
-  // otherwise fall back to JSON-stringified body.
-  const rawBody: string = (req as any).rawBody ? (req as any).rawBody.toString() : JSON.stringify(req.body);
+  
+  const rawBody = (req as any).rawBody ? (req as any).rawBody.toString() : JSON.stringify(req.body);
   const hmac = crypto.createHmac('sha256', secret);
   hmac.update(rawBody);
   const expectedSignature = hmac.digest('hex');
@@ -136,7 +125,6 @@ export const hesabWebhook = onRequest({ secrets: [hesabpayWebhookSecret] }, asyn
     return;
   }
 
-  // Signature is valid, process the event
   const { transaction_id, success, amount, email } = req.body;
 
   if (!transaction_id) {
@@ -147,10 +135,8 @@ export const hesabWebhook = onRequest({ secrets: [hesabpayWebhookSecret] }, asyn
   const transactionRef = db.collection('transactions').doc(transaction_id);
 
   try {
-    // Idempotent update
     await db.runTransaction(async (t) => {
       const doc = await t.get(transactionRef);
-      // Only update if it's a new transaction or status has changed
       if (!doc.exists || doc.data()?.status !== (success ? 'success' : 'failed')) {
         t.set(transactionRef, {
           transaction_id,
@@ -171,9 +157,7 @@ export const hesabWebhook = onRequest({ secrets: [hesabpayWebhookSecret] }, asyn
   }
 });
 
-
-// --- 3. Distribute Payment to Vendors ---
-export const distributePayment = onCall(async (request) => {
+export const distributePayment = onCall({ secrets: [hesabpayApiKey, merchantPin] }, async (request) => {
   const { vendors } = request.data;
   const uid = request.auth?.uid;
 
