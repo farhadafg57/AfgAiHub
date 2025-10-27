@@ -224,5 +224,57 @@ service cloud.firestore {
         allow delete: if isExistingOwner(userId);
       }
     }
+
+    /**
+     * @description Secures payment sessions. These are managed by Cloud Functions.
+     * Users can read their own sessions. Only Cloud Functions can write.
+     * @path /payment_sessions/{sessionId}
+     */
+    match /payment_sessions/{sessionId} {
+      // Users can read sessions they own (authenticated or guest)
+      allow read: if request.auth != null && 
+                     (resource.data.userId == request.auth.uid || 
+                      resource.data.guest == true);
+      
+      // Only allow writes from server (Cloud Functions will handle this)
+      allow write: if false;
+    }
+
+    /**
+     * @description Secures payment transactions. These are managed by Cloud Functions.
+     * Users can read their own transactions.
+     * @path /payment_transactions/{transactionId}
+     */
+    match /payment_transactions/{transactionId} {
+      // Users can read transactions they own
+      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+      
+      // Only allow writes from server (Cloud Functions will handle this)
+      allow write: if false;
+    }
+
+    /**
+     * @description Secures payment distributions. Only accessible by Cloud Functions.
+     * @path /payment_distributions/{distributionId}
+     */
+    match /payment_distributions/{distributionId} {
+      // Users can read distributions they initiated
+      allow read: if request.auth != null && resource.data.initiatorUserId == request.auth.uid;
+      
+      // Only allow writes from server
+      allow write: if false;
+    }
+
+    /**
+     * @description Payment errors log. Only Cloud Functions can write.
+     * @path /payment_errors/{errorId}
+     */
+    match /payment_errors/{errorId} {
+      // No read access for users
+      allow read: if false;
+      
+      // Only allow writes from server
+      allow write: if false;
+    }
   }
 }

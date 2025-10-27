@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense } from 'react';
+import { Suspense, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -20,6 +20,41 @@ function FailContent() {
   } catch (error) {
     console.error('Failed to parse transaction data from URL:', error);
   }
+
+  useEffect(() => {
+    // Listen for paymentFailure message from HesabPay
+    const handlePaymentFailure = (event: MessageEvent) => {
+      // Validate origin - only accept messages from HesabPay domain
+      const allowedOrigins = [
+        'https://api.hesab.com',
+        'https://hesab.com',
+        'https://checkout.hesab.com',
+      ];
+      
+      if (!allowedOrigins.some(origin => event.origin.startsWith(origin))) {
+        console.warn('Payment message received from unauthorized origin:', event.origin);
+        return;
+      }
+
+      if (event.data?.type === 'paymentFailure' || event.data?.type === 'paymentCancelled') {
+        console.log('Payment failure event received:', event.data);
+        
+        // Process payment failure data
+        const paymentData = event.data.payload;
+        
+        // Store failure info for debugging or retry
+        if (paymentData) {
+          localStorage.setItem('last_payment_failure', JSON.stringify(paymentData));
+        }
+      }
+    };
+
+    window.addEventListener('message', handlePaymentFailure);
+
+    return () => {
+      window.removeEventListener('message', handlePaymentFailure);
+    };
+  }, []);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
