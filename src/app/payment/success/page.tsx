@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense } from 'react';
+import { Suspense, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -22,6 +22,42 @@ function SuccessContent() {
     console.error('Failed to parse transaction data from URL:', error);
     // Handle error gracefully, maybe show a generic success message
   }
+
+  useEffect(() => {
+    // Listen for paymentSuccess message from HesabPay
+    const handlePaymentSuccess = (event: MessageEvent) => {
+      // Validate origin - only accept messages from HesabPay domain
+      const allowedOrigins = [
+        'https://api.hesab.com',
+        'https://hesab.com',
+        'https://checkout.hesab.com',
+      ];
+      
+      if (!allowedOrigins.some(origin => event.origin.startsWith(origin))) {
+        console.warn('Payment message received from unauthorized origin:', event.origin);
+        return;
+      }
+
+      if (event.data?.type === 'paymentSuccess') {
+        console.log('Payment success event received:', event.data);
+        
+        // Process payment success data
+        const paymentData = event.data.payload;
+        
+        // You can update UI or trigger additional actions here
+        // For example, store in localStorage or update state
+        if (paymentData?.transaction_id) {
+          localStorage.setItem('last_transaction', JSON.stringify(paymentData));
+        }
+      }
+    };
+
+    window.addEventListener('message', handlePaymentSuccess);
+
+    return () => {
+      window.removeEventListener('message', handlePaymentSuccess);
+    };
+  }, []);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
