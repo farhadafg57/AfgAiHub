@@ -17,7 +17,7 @@ const hesabpayApiKey = defineString('HESABPAY_KEY');
 const hesabpayWebhookSecret = defineSecret('HESABPAY_WEBHOOK_SECRET');
 const hesabpayBaseUrl = defineString(
   'HESABPAY_BASE_URL',
-  'https://api.hesab.com/api/v1'
+  { default: 'https://api.hesab.com/api/v1' }
 );
 const merchantPin = defineString('MERCHANT_PIN');
 
@@ -64,7 +64,7 @@ export const createPaymentSession = onCall(async (request) => {
 
     if (response.status !== 200 || !response.data?.sessionId) {
       console.error("Invalid response from HesabPay:", response.data);
-      await db.collection('payment_errors').add({
+      await db.collection('payments').doc('errors').collection('items').add({
         function: 'createPaymentSession',
         error: 'Invalid response from HesabPay',
         data: response.data,
@@ -87,12 +87,12 @@ export const createPaymentSession = onCall(async (request) => {
       createdAt: new Date(),
     };
 
-    await db.collection('payments/sessions').doc(sessionId).set(sessionDoc);
+    await db.collection('payments').doc('sessions').collection('items').doc(sessionId).set(sessionDoc);
 
     return { success: true, checkout_url, sessionId };
   } catch (err: any) {
     console.error('Error creating payment session:', err.response?.data || err.message);
-    await db.collection('payment_errors').add({
+    await db.collection('payments').doc('errors').collection('items').add({
       function: 'createPaymentSession',
       error: err.message,
       details: err.response?.data,
@@ -131,7 +131,10 @@ export const hesabWebhook = onRequest({ secrets: [hesabpayWebhookSecret] }, asyn
   }
 
   // Signature is valid, process the event
-  const { transaction_id, success, amount, email } = req.body;
+  const { transaction_id, session_id, sessionId, success, amount, email, plan } = req.body;
+  
+  // Support both session_id and sessionId
+  const actualSessionId = session_id || sessionId;
 
   if (!transaction_id) {
     res.status(400).send('Missing transaction_id in webhook payload.');
@@ -148,6 +151,7 @@ export const hesabWebhook = onRequest({ secrets: [hesabpayWebhookSecret] }, asyn
       if (!doc.exists || doc.data()?.status !== (success ? 'success' : 'failed')) {
         t.set(transactionRef, {
           transaction_id,
+          sessionId: actualSessionId || null,
           status: success ? 'success' : 'failed',
           amount,
           email: email || null,
@@ -156,6 +160,47 @@ export const hesabWebhook = onRequest({ secrets: [hesabpayWebhookSecret] }, asyn
         }, { merge: true });
       }
     });
+
+    // Update payment session if sessionId is provided
+    if (actualSessionId) {
+      const sessionRef = db.collection('payments').doc('sessions').collection('items').doc(actualSessionId);
+      const sessionDoc = await sessionRef.get();
+      
+      if (sessionDoc.exists) {
+        await sessionRef.update({
+          status: success ? 'completed' : 'failed',
+          transaction_id,
+          updatedAt: new Date(),
+        });
+
+        // Grant subscription if payment was successful
+        if (success) {
+          const sessionData = sessionDoc.data();
+          const userId = sessionData?.userId;
+          
+          if (userId) {
+            const subscriptionPlan = plan || sessionData?.plan || 'basic';
+            const userRef = db.collection('users').doc(userId);
+            const userDoc = await userRef.get();
+            const existingData = userDoc.data();
+            
+            // Only update subscription, preserve other user data
+            await userRef.set({
+              ...existingData,
+              subscription: {
+                ...(existingData?.subscription || {}),
+                status: 'active',
+                plan: subscriptionPlan,
+                activatedAt: new Date(),
+                transactionId: transaction_id,
+              }
+            });
+            
+            console.log(`Subscription granted to user ${userId} with plan ${subscriptionPlan}`);
+          }
+        }
+      }
+    }
 
     console.log(`Transaction ${transaction_id} status updated to ${success ? 'success' : 'failed'}`);
     res.status(200).send({ received: true });
