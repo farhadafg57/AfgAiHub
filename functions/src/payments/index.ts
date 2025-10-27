@@ -15,10 +15,9 @@ const db = getFirestore();
 // Define Firebase environment variables
 const hesabpayApiKey = defineString('HESABPAY_KEY');
 const hesabpayWebhookSecret = defineSecret('HESABPAY_WEBHOOK_SECRET');
-const hesabpayBaseUrl = defineString(
-  'HESABPAY_BASE_URL',
-  'https://api.hesab.com/api/v1'
-);
+const hesabpayBaseUrl = defineString('HESABPAY_BASE_URL', {
+  default: 'https://api.hesab.com/api/v1'
+});
 const merchantPin = defineString('MERCHANT_PIN');
 
 // --- Helper for PIN Encryption (AES-256-CBC) ---
