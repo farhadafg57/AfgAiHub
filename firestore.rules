@@ -223,6 +223,46 @@ service cloud.firestore {
         // Allows a user to delete their own transaction.
         allow delete: if isExistingOwner(userId);
       }
+
+      // ------------------------------------------------------------------
+      // Top-level payment collections used by Cloud Functions
+      // Cloud Functions should be the only writer. Clients may read their
+      // own resources where applicable (sessions/transactions), but cannot
+      // write to these collections directly.
+      // ------------------------------------------------------------------
+
+      match /payment_sessions/{sessionId} {
+        allow read: if request.auth != null && (
+          resource.data.userId == request.auth.uid || resource.data.guest == true
+        );
+        // Only Cloud Functions may write
+        allow write: if false;
+        allow list: if false;
+      }
+
+      match /payment_transactions/{transactionId} {
+        allow read: if request.auth != null && (
+          resource.data.userId == request.auth.uid || resource.data.userId == null
+        );
+        // Only Cloud Functions may write
+        allow write: if false;
+        allow list: if false;
+      }
+
+      match /payment_distributions/{distributionId} {
+        // Users can read distributions they initiated
+        allow get: if request.auth != null && resource.data.initiatorUserId == request.auth.uid;
+        allow list: if false;
+        // Only Cloud Functions may write
+        allow write: if false;
+      }
+
+      match /payment_errors/{errorId} {
+        // No client access to error logs
+        allow read: if false;
+        allow write: if false;
+        allow list: if false;
+      }
     }
   }
 }

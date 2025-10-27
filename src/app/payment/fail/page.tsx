@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense } from 'react';
+import { Suspense, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -20,6 +20,32 @@ function FailContent() {
   } catch (error) {
     console.error('Failed to parse transaction data from URL:', error);
   }
+
+  useEffect(() => {
+    const allowedOrigins = [
+      'https://api.hesab.com',
+      'https://hesab.com',
+      'https://checkout.hesab.com',
+    ];
+
+    function handleMessage(event: MessageEvent) {
+      try {
+        if (!event?.origin) return;
+        if (!allowedOrigins.some((o) => event.origin.startsWith(o))) return;
+        const { type, payload } = event.data || {};
+        if ((type === 'paymentFailure' || type === 'paymentCancelled') && payload) {
+          const qs = new URLSearchParams();
+          qs.set('data', JSON.stringify(payload));
+          window.history.replaceState(null, '', `${window.location.pathname}?${qs.toString()}`);
+        }
+      } catch (err) {
+        console.error('Error handling HesabPay message:', err);
+      }
+    }
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">

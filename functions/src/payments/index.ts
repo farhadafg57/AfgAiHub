@@ -13,22 +13,25 @@ if (!getApps().length) {
 const db = getFirestore();
 
 // Define Firebase environment variables
-const hesabpayApiKey = defineString('HESABPAY_KEY');
+const hesabpayApiKey = defineSecret('HESABPAY_KEY');
 const hesabpayWebhookSecret = defineSecret('HESABPAY_WEBHOOK_SECRET');
-const hesabpayBaseUrl = defineString(
-  'HESABPAY_BASE_URL',
-  'https://api.hesab.com/api/v1'
-);
-const merchantPin = defineString('MERCHANT_PIN');
+const hesabpayBaseUrl = defineString('HESABPAY_BASE_URL', { default: 'https://api.hesab.com/api/v1' });
+const merchantPin = defineSecret('MERCHANT_PIN');
 
 // --- Helper for PIN Encryption (AES-256-CBC) ---
-function encryptPin(pin: string, key: string): string {
+export function encryptPin(pin: string, key: string): string {
   const secretKey = key.substring(0, 32).padEnd(32, '\0');
   const iv = crypto.randomBytes(16);
   const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(secretKey), iv);
   let encrypted = cipher.update(pin, 'utf8', 'base64');
   encrypted += cipher.final('base64');
   return Buffer.from(iv.toString('hex') + encrypted, 'utf8').toString('base64');
+}
+
+export function computeHmacHex(raw: string, secret: string): string {
+  const hmac = crypto.createHmac('sha256', secret);
+  hmac.update(raw);
+  return hmac.digest('hex');
 }
 
 // --- 1. Create Payment Session ---
@@ -119,9 +122,12 @@ export const hesabWebhook = onRequest({ secrets: [hesabpayWebhookSecret] }, asyn
     return;
   }
 
-  // Verify signature
+  // Verify signature using HMAC SHA256.
+  // Prefer using the raw request body when available (more reliable for signature checks),
+  // otherwise fall back to JSON-stringified body.
+  const rawBody: string = (req as any).rawBody ? (req as any).rawBody.toString() : JSON.stringify(req.body);
   const hmac = crypto.createHmac('sha256', secret);
-  hmac.update(JSON.stringify(req.body));
+  hmac.update(rawBody);
   const expectedSignature = hmac.digest('hex');
 
   if (signature !== expectedSignature) {

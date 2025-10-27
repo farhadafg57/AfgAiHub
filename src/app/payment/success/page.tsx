@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense } from 'react';
+import { Suspense, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -22,6 +22,33 @@ function SuccessContent() {
     console.error('Failed to parse transaction data from URL:', error);
     // Handle error gracefully, maybe show a generic success message
   }
+
+  useEffect(() => {
+    const allowedOrigins = [
+      'https://api.hesab.com',
+      'https://hesab.com',
+      'https://checkout.hesab.com',
+    ];
+
+    function handleMessage(event: MessageEvent) {
+      try {
+        if (!event?.origin) return;
+        if (!allowedOrigins.some((o) => event.origin.startsWith(o))) return;
+        const { type, payload } = event.data || {};
+        if (type === 'paymentSuccess' && payload) {
+          // Push transaction payload into the URL so existing parsing can pick it up
+          const qs = new URLSearchParams();
+          qs.set('data', JSON.stringify(payload));
+          window.history.replaceState(null, '', `${window.location.pathname}?${qs.toString()}`);
+        }
+      } catch (err) {
+        console.error('Error handling HesabPay message:', err);
+      }
+    }
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
@@ -51,6 +78,12 @@ function SuccessContent() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Listen for postMessage events from HesabPay (if using embedded checkout).
+                If a paymentSuccess message arrives we append it to the URL as a
+                `data` query param so the existing parsing code can read it. */}
+            {
+              /* Client-only listener added via useEffect in the component scope */
+            }
             {transactionData?.transaction_id && (
               <p className="text-sm text-muted-foreground">
                 Your Transaction ID is: <strong>{transactionData.transaction_id}</strong>
