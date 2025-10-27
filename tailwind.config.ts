@@ -10,7 +10,7 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        body: ['Inter', 'sans-serif'],
+        body: ['Poppins', 'sans-serif'],
         headline: ['"Space Grotesk"', 'sans-serif'],
         sans: ['Poppins', 'sans-serif'],
         code: ['"JetBrains Mono"', 'monospace'],
