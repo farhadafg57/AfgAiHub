@@ -63,7 +63,7 @@ export const createPaymentSession = onCall(async (request) => {
 
     if (response.status !== 200 || !response.data?.sessionId) {
       console.error("Invalid response from HesabPay:", response.data);
-      await db.collection('payment_errors').add({
+      await db.collection('payments').doc('errors').collection('entries').add({
         function: 'createPaymentSession',
         error: 'Invalid response from HesabPay',
         data: response.data,
@@ -86,12 +86,12 @@ export const createPaymentSession = onCall(async (request) => {
       createdAt: new Date(),
     };
 
-    await db.collection('payments/sessions').doc(sessionId).set(sessionDoc);
+    await db.collection('payments').doc('sessions').collection('entries').doc(sessionId).set(sessionDoc);
 
     return { success: true, checkout_url, sessionId };
   } catch (err: any) {
     console.error('Error creating payment session:', err.response?.data || err.message);
-    await db.collection('payment_errors').add({
+    await db.collection('payments').doc('errors').collection('entries').add({
       function: 'createPaymentSession',
       error: err.message,
       details: err.response?.data,
@@ -130,7 +130,7 @@ export const hesabWebhook = onRequest({ secrets: [hesabpayWebhookSecret] }, asyn
   }
 
   // Signature is valid, process the event
-  const { transaction_id, success, amount, email } = req.body;
+  const { transaction_id, sessionId, success, amount, email, plan } = req.body;
 
   if (!transaction_id) {
     res.status(400).send('Missing transaction_id in webhook payload.');
@@ -138,6 +138,9 @@ export const hesabWebhook = onRequest({ secrets: [hesabpayWebhookSecret] }, asyn
   }
 
   const transactionRef = db.collection('transactions').doc(transaction_id);
+  const sessionRef = sessionId 
+    ? db.collection('payments').doc('sessions').collection('entries').doc(sessionId) 
+    : null;
 
   try {
     // Idempotent update
@@ -147,6 +150,7 @@ export const hesabWebhook = onRequest({ secrets: [hesabpayWebhookSecret] }, asyn
       if (!doc.exists || doc.data()?.status !== (success ? 'success' : 'failed')) {
         t.set(transactionRef, {
           transaction_id,
+          sessionId: sessionId || null,
           status: success ? 'success' : 'failed',
           amount,
           email: email || null,
@@ -154,12 +158,61 @@ export const hesabWebhook = onRequest({ secrets: [hesabpayWebhookSecret] }, asyn
           webhookPayload: req.body,
         }, { merge: true });
       }
+
+      // Update payment session if sessionId is provided
+      if (sessionRef) {
+        const sessionDoc = await t.get(sessionRef);
+        if (sessionDoc.exists) {
+          t.update(sessionRef, {
+            status: success ? 'completed' : 'failed',
+            transactionId: transaction_id,
+            updatedAt: new Date(),
+          });
+
+          // Grant subscription if payment succeeded
+          if (success) {
+            const sessionData = sessionDoc.data();
+            const userId = sessionData?.userId;
+            
+            if (userId) {
+              const userRef = db.collection('users').doc(userId);
+              const subscriptionPlan = plan || sessionData?.items?.[0]?.plan || 'basic';
+              
+              t.set(userRef.collection('subscription').doc('current'), {
+                status: 'active',
+                plan: subscriptionPlan,
+                amount,
+                sessionId,
+                transactionId: transaction_id,
+                activatedAt: new Date(),
+                updatedAt: new Date(),
+              }, { merge: true });
+
+              console.log(`Subscription granted for user ${userId}, plan: ${subscriptionPlan}`);
+            }
+          }
+        }
+      }
     });
 
     console.log(`Transaction ${transaction_id} status updated to ${success ? 'success' : 'failed'}`);
     res.status(200).send({ received: true });
   } catch (error: any) {
     console.error(`Error updating transaction ${transaction_id}:`, error);
+    
+    // Log error to payments/errors
+    try {
+      await db.collection('payments').doc('errors').collection('entries').add({
+        function: 'hesabWebhook',
+        error: error.message,
+        transactionId: transaction_id,
+        sessionId: sessionId || null,
+        timestamp: new Date(),
+      });
+    } catch (logError) {
+      console.error('Failed to log webhook error:', logError);
+    }
+    
     res.status(500).send('Internal Server Error while processing webhook.');
   }
 });
@@ -194,7 +247,7 @@ export const distributePayment = onCall(async (request) => {
   const payload = { pin: encryptedPin, vendors };
 
   const txnId = uuidv4();
-  const distributionLogRef = db.collection('payments/distributions').doc(txnId);
+  const distributionLogRef = db.collection('payments').doc('distributions').collection('entries').doc(txnId);
 
   try {
     const response = await axios.post(apiEndpoint, payload, { headers });
