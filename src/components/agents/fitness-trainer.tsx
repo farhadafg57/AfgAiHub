@@ -34,10 +34,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Slider } from '@/components/ui/slider';
-import { HeartPulse, Dumbbell, Apple, HelpCircle } from 'lucide-react';
+import { HeartPulse, Dumbbell, Apple, HelpCircle, Loader2 } from 'lucide-react';
 import { Skeleton } from '../ui/skeleton';
-import { useToast } from '@/hooks/use-toast';
 import { getFitnessPlanAction } from '@/app/actions/fitness-trainer-actions';
 
 const formSchema = z.object({
@@ -50,7 +48,6 @@ const formSchema = z.object({
 export default function FitnessTrainer() {
   const [isPending, startTransition] = useTransition();
   const [result, setResult] = useState<FitnessPlanOutput | null>(null);
-  const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -61,8 +58,6 @@ export default function FitnessTrainer() {
       availableEquipment: 'none',
     },
   });
-  
-  const daysPerWeek = form.watch('daysPerWeek');
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     setResult(null);
@@ -72,11 +67,7 @@ export default function FitnessTrainer() {
         setResult(response);
       } catch (error) {
         console.error(error);
-        toast({
-          title: "An error occurred.",
-          description: "Failed to create fitness plan. Please try again.",
-          variant: "destructive"
-        })
+        alert("Failed to create fitness plan. Please try again.");
       }
     });
   }
@@ -140,21 +131,22 @@ export default function FitnessTrainer() {
                 control={form.control}
                 name="daysPerWeek"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Workout Days Per Week: {daysPerWeek}</FormLabel>
-                    <FormControl>
-                      <Slider
-                        min={1}
-                        max={7}
-                        step={1}
-                        defaultValue={[field.value]}
-                        onValueChange={(value) => field.onChange(value[0])}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
+                    <FormItem>
+                        <FormLabel>Workout Days Per Week: {field.value}</FormLabel>
+                        <FormControl>
+                            <Input 
+                                type="range" 
+                                min="1" 
+                                max="7" 
+                                step="1" 
+                                {...field} 
+                                onChange={e => field.onChange(parseInt(e.target.value))}
+                            />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
                 )}
-              />
+                />
                <FormField
                 control={form.control}
                 name="availableEquipment"
@@ -171,6 +163,7 @@ export default function FitnessTrainer() {
             </CardContent>
             <CardFooter>
               <Button type="submit" disabled={isPending}>
+                {isPending && <Loader2 className="animate-spin" />}
                 {isPending ? 'Generating Plan...' : 'Create My Plan'}
               </Button>
             </CardFooter>

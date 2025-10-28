@@ -27,9 +27,8 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
-import { AppWindow, Copy, Check, HelpCircle } from 'lucide-react';
+import { AppWindow, Copy, Check, HelpCircle, Loader2 } from 'lucide-react';
 import { Skeleton } from '../ui/skeleton';
-import { useToast } from '@/hooks/use-toast';
 import { getAppCodeAction } from '@/app/actions/app-prototyper-actions';
 
 const formSchema = z.object({
@@ -40,7 +39,6 @@ export default function AppPrototyper() {
   const [isPending, startTransition] = useTransition();
   const [result, setResult] = useState<AppPrototyperOutput | null>(null);
   const [copied, setCopied] = useState(false);
-  const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -65,11 +63,7 @@ export default function AppPrototyper() {
         setResult(response);
       } catch (error) {
         console.error(error);
-        toast({
-          title: "An error occurred.",
-          description: "Failed to generate code. Please try again.",
-          variant: "destructive"
-        })
+        alert("Failed to generate code. Please try again.");
       }
     });
   }
@@ -104,7 +98,7 @@ export default function AppPrototyper() {
                     <FormControl>
                       <Textarea
                         placeholder="e.g., 'A simple to-do list app with features to add, remove, and mark tasks as complete.'"
-                        className="min-h-[120px] font-code"
+                        className="min-h-[150px] font-code"
                         {...field}
                       />
                     </FormControl>
@@ -115,6 +109,7 @@ export default function AppPrototyper() {
             </CardContent>
             <CardFooter>
               <Button type="submit" disabled={isPending}>
+                {isPending && <Loader2 className="animate-spin" />}
                 {isPending ? 'Generating Code...' : 'Generate Code'}
               </Button>
             </CardFooter>

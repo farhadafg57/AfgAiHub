@@ -29,9 +29,8 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Gem, Upload, DollarSign, Key, Microscope, HelpCircle } from 'lucide-react';
+import { Gem, Upload, DollarSign, Key, Microscope, HelpCircle, Loader2 } from 'lucide-react';
 import { Skeleton } from '../ui/skeleton';
-import { useToast } from '@/hooks/use-toast';
 import { authenticateAction } from '@/app/actions/antique-authenticator-actions';
 
 const formSchema = z.object({
@@ -45,7 +44,6 @@ export default function AntiqueAuthenticator() {
   const [isPending, startTransition] = useTransition();
   const [result, setResult] = useState<AuthenticateAntiqueOutput | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
-  const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -76,11 +74,7 @@ export default function AntiqueAuthenticator() {
         setResult(response);
       } catch (error) {
         console.error(error);
-        toast({
-          title: "An error occurred.",
-          description: "Failed to authenticate the antique. Please try again.",
-          variant: "destructive"
-        })
+        alert("Failed to authenticate the antique. Please try again.");
       }
     });
   }
@@ -146,6 +140,7 @@ export default function AntiqueAuthenticator() {
             </CardContent>
             <CardFooter>
               <Button type="submit" disabled={isPending}>
+                {isPending && <Loader2 className="animate-spin" />}
                 {isPending ? 'Analyzing...' : 'Authenticate'}
               </Button>
             </CardFooter>

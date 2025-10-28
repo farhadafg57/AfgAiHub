@@ -12,16 +12,16 @@ function DashboardLayoutContent({
 }: {
   children: React.ReactNode;
 }) {
-  const { user, isUserLoading } = useUser();
+  const { user, isLoading } = useUser();
   const router = useRouter();
 
   useEffect(() => {
-    if (!isUserLoading && !user) {
+    if (!isLoading && !user) {
       router.push('/login');
     }
-  }, [user, isUserLoading, router]);
+  }, [user, isLoading, router]);
 
-  if (isUserLoading || !user) {
+  if (isLoading || !user) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
          <BrainCircuit className="h-12 w-12 animate-pulse text-primary" />

@@ -28,9 +28,8 @@ import {
 } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertTriangle, Stethoscope, HelpCircle } from 'lucide-react';
+import { AlertTriangle, Stethoscope, HelpCircle, Loader2 } from 'lucide-react';
 import { Skeleton } from '../ui/skeleton';
-import { useToast } from '@/hooks/use-toast';
 import { getMedicalInfoAction } from '@/app/actions/doctor-assistant-actions';
 
 const formSchema = z.object({
@@ -40,7 +39,6 @@ const formSchema = z.object({
 export default function DoctorAssistant() {
   const [isPending, startTransition] = useTransition();
   const [result, setResult] = useState<PreliminaryMedicalInformationOutput | null>(null);
-  const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -57,11 +55,7 @@ export default function DoctorAssistant() {
         setResult(response);
       } catch (error) {
         console.error(error);
-        toast({
-          title: "An error occurred.",
-          description: "Failed to get medical information. Please try again.",
-          variant: "destructive"
-        })
+        alert("Failed to get medical information. Please try again.");
       }
     });
   }
@@ -107,6 +101,7 @@ export default function DoctorAssistant() {
             </CardContent>
             <CardFooter>
               <Button type="submit" disabled={isPending}>
+                {isPending && <Loader2 className="animate-spin" />}
                 {isPending ? 'Analyzing Symptoms...' : 'Analyze Symptoms'}
               </Button>
             </CardFooter>

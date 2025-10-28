@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { Toaster } from '@/components/ui/toaster';
 import {
   Poppins,
   Space_Grotesk,
@@ -63,7 +62,6 @@ export default function RootLayout({
         <FirebaseProvider>
           {children}
         </FirebaseProvider>
-        <Toaster />
       </body>
     </html>
   );

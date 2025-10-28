@@ -28,9 +28,8 @@ import {
 } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
-import { Briefcase, Link as LinkIcon, Lightbulb, HelpCircle } from 'lucide-react';
+import { Briefcase, Link as LinkIcon, Lightbulb, HelpCircle, Loader2 } from 'lucide-react';
 import { Skeleton } from '../ui/skeleton';
-import { useToast } from '@/hooks/use-toast';
 import { getCareerAdviceAction } from '@/app/actions/career-coach-actions';
 
 const formSchema = z.object({
@@ -41,7 +40,6 @@ const formSchema = z.object({
 export default function CareerCoach() {
   const [isPending, startTransition] = useTransition();
   const [result, setResult] = useState<CareerAdviceOutput | null>(null);
-  const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -59,11 +57,7 @@ export default function CareerCoach() {
         setResult(response);
       } catch (error) {
         console.error(error);
-        toast({
-          title: "An error occurred.",
-          description: "Failed to get career advice. Please try again.",
-          variant: "destructive"
-        })
+        alert("Failed to get career advice. Please try again.");
       }
     });
   }
@@ -121,6 +115,7 @@ export default function CareerCoach() {
             </CardContent>
             <CardFooter>
               <Button type="submit" disabled={isPending}>
+                {isPending && <Loader2 className="animate-spin" />}
                 {isPending ? 'Getting Advice...' : 'Get Career Advice'}
               </Button>
             </CardFooter>

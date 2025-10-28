@@ -34,9 +34,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { PenSquare, Lightbulb, FileText, HelpCircle } from 'lucide-react';
+import { PenSquare, Lightbulb, FileText, HelpCircle, Loader2 } from 'lucide-react';
 import { Skeleton } from '../ui/skeleton';
-import { useToast } from '@/hooks/use-toast';
 import { getContentIdeasAction } from '@/app/actions/content-creator-actions';
 
 const formSchema = z.object({
@@ -48,7 +47,6 @@ const formSchema = z.object({
 export default function ContentCreator() {
   const [isPending, startTransition] = useTransition();
   const [result, setResult] = useState<ContentCreatorOutput | null>(null);
-  const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -67,11 +65,7 @@ export default function ContentCreator() {
         setResult(response);
       } catch (error) {
         console.error(error);
-        toast({
-          title: "An error occurred.",
-          description: "Failed to generate content. Please try again.",
-          variant: "destructive"
-        })
+        alert("Failed to generate content. Please try again.");
       }
     });
   }
@@ -147,6 +141,7 @@ export default function ContentCreator() {
             </CardContent>
             <CardFooter>
               <Button type="submit" disabled={isPending}>
+                {isPending && <Loader2 className="animate-spin" />}
                 {isPending ? 'Generating...' : 'Generate Content'}
               </Button>
             </CardFooter>

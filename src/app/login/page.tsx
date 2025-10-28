@@ -6,7 +6,6 @@ import { useAuth, useUser } from '@/firebase';
 import {
   GoogleAuthProvider,
   signInWithPopup,
-  User,
 } from 'firebase/auth';
 import { Button } from '@/components/ui/button';
 import {
@@ -22,14 +21,14 @@ const provider = new GoogleAuthProvider();
 
 export default function LoginPage() {
   const auth = useAuth();
-  const { user, isUserLoading } = useUser();
+  const { user, isLoading } = useUser();
   const router = useRouter();
 
   useEffect(() => {
-    if (!isUserLoading && user) {
+    if (!isLoading && user) {
       router.push('/dashboard');
     }
-  }, [user, isUserLoading, router]);
+  }, [user, isLoading, router]);
 
   const handleSignIn = async () => {
     try {
@@ -40,7 +39,7 @@ export default function LoginPage() {
     }
   };
 
-  if (isUserLoading || user) {
+  if (isLoading || user) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
         <BrainCircuit className="h-12 w-12 animate-pulse text-primary" />

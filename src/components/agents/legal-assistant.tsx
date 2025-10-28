@@ -28,9 +28,8 @@ import {
 } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertTriangle, Scale, HelpCircle } from 'lucide-react';
+import { AlertTriangle, Scale, HelpCircle, Loader2 } from 'lucide-react';
 import { Skeleton } from '../ui/skeleton';
-import { useToast } from '@/hooks/use-toast';
 import { getLegalInfoAction } from '@/app/actions/legal-assistant-actions';
 
 const formSchema = z.object({
@@ -40,7 +39,6 @@ const formSchema = z.object({
 export default function LegalAssistant() {
   const [isPending, startTransition] = useTransition();
   const [result, setResult] = useState<LegalInformationOutput | null>(null);
-  const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -57,11 +55,7 @@ export default function LegalAssistant() {
         setResult(response);
       } catch (error) {
         console.error(error);
-        toast({
-          title: "An error occurred.",
-          description: "Failed to get legal information. Please try again.",
-          variant: "destructive"
-        })
+        alert("Failed to get legal information. Please try again.");
       }
     });
   }
@@ -106,6 +100,7 @@ export default function LegalAssistant() {
             </CardContent>
             <CardFooter>
               <Button type="submit" disabled={isPending}>
+                {isPending && <Loader2 className="animate-spin" />}
                 {isPending ? 'Analyzing...' : 'Get Information'}
               </Button>
             </CardFooter>

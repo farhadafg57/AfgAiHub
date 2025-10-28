@@ -28,8 +28,7 @@ import {
 } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '../ui/skeleton';
-import { BookOpen, HelpCircle } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { BookOpen, HelpCircle, Loader2 } from 'lucide-react';
 import { getGuidanceAction } from '@/app/actions/quran-tutor-actions';
 
 const formSchema = z.object({
@@ -39,7 +38,6 @@ const formSchema = z.object({
 export default function QuranTutor() {
   const [isPending, startTransition] = useTransition();
   const [result, setResult] = useState<QuranicGuidanceOutput | null>(null);
-  const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -56,11 +54,7 @@ export default function QuranTutor() {
         setResult(response);
       } catch (error) {
         console.error(error);
-        toast({
-          title: "An error occurred.",
-          description: "Failed to get guidance. Please try again.",
-          variant: "destructive"
-        })
+        alert("Failed to get guidance. Please try again.");
       }
     });
   }
@@ -106,6 +100,7 @@ export default function QuranTutor() {
             </CardContent>
             <CardFooter>
               <Button type="submit" disabled={isPending}>
+                {isPending && <Loader2 className="animate-spin" />}
                 {isPending ? 'Getting Guidance...' : 'Get Guidance'}
               </Button>
             </CardFooter>

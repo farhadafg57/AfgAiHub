@@ -28,9 +28,8 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Home, HelpCircle } from 'lucide-react';
+import { Home, HelpCircle, Loader2 } from 'lucide-react';
 import { Skeleton } from '../ui/skeleton';
-import { useToast } from '@/hooks/use-toast';
 import { getPropertyInfoAction } from '@/app/actions/real-estate-agent-actions';
 
 const formSchema = z.object({
@@ -41,7 +40,6 @@ const formSchema = z.object({
 export default function RealEstateAgent() {
   const [isPending, startTransition] = useTransition();
   const [result, setResult] = useState<GetPropertyInformationOutput | null>(null);
-  const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -59,11 +57,7 @@ export default function RealEstateAgent() {
         setResult(response);
       } catch (error) {
         console.error(error);
-        toast({
-          title: "An error occurred.",
-          description: "Failed to get property information. Please try again.",
-          variant: "destructive"
-        })
+        alert("Failed to get property information. Please try again.");
       }
     });
   }
@@ -121,6 +115,7 @@ export default function RealEstateAgent() {
             </CardContent>
             <CardFooter>
               <Button type="submit" disabled={isPending}>
+                {isPending && <Loader2 className="animate-spin" />}
                 {isPending ? 'Searching...' : 'Get Information'}
               </Button>
             </CardFooter>
