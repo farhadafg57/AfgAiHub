@@ -1,5 +1,3 @@
-# Firebase Studio
+# AfgAiHub - A Modular AI Ecosystem
 
-This is a NextJS starter in Firebase Studio.
-
-To get started, take a look at src/app/page.tsx
+This is a Next.js application built with Firebase Studio, featuring a suite of specialized AI agents designed to assist with various tasks.
