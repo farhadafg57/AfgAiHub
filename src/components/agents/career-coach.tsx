@@ -1,12 +1,8 @@
-"use client";
+'use client';
 
 import { useState, useTransition } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import Link from 'next/link';
 import {
-  CareerAdviceInput,
   CareerAdviceOutput,
 } from '@/ai/flows/career-coach-flow';
 import { Button } from '@/components/ui/button';
@@ -18,49 +14,39 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Briefcase, Link as LinkIcon, Lightbulb, HelpCircle, Loader2 } from 'lucide-react';
 import { Skeleton } from '../ui/skeleton';
 import { getCareerAdviceAction } from '@/app/actions/career-coach-actions';
 
-const formSchema = z.object({
-  careerGoal: z.string().min(10, 'Please describe your goal in more detail.'),
-  experience: z.string().min(20, 'Please provide a summary of your experience or resume.'),
-});
-
 export default function CareerCoach() {
   const [isPending, startTransition] = useTransition();
   const [result, setResult] = useState<CareerAdviceOutput | null>(null);
+  const [careerGoal, setCareerGoal] = useState('');
+  const [experience, setExperience] = useState('');
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      careerGoal: '',
-      experience: '',
-    },
-  });
-
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (careerGoal.length < 10) {
+      alert('Please describe your goal in more detail.');
+      return;
+    }
+    if (experience.length < 20) {
+      alert('Please provide a summary of your experience or resume.');
+      return;
+    }
     setResult(null);
     startTransition(async () => {
       try {
-        const response = await getCareerAdviceAction(values);
+        const response = await getCareerAdviceAction({ careerGoal, experience });
         setResult(response);
       } catch (error) {
         console.error(error);
         alert("Failed to get career advice. Please try again.");
       }
     });
-  }
+  };
 
   return (
     <div className="space-y-6">
@@ -79,48 +65,36 @@ export default function CareerCoach() {
             </Link>
           </Button>
         </CardHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
-            <CardContent className="space-y-4">
-              <FormField
-                control={form.control}
-                name="careerGoal"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Your Career Goal</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g., 'Transition into a product management role'" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+        <form onSubmit={handleSubmit}>
+          <CardContent className="space-y-4">
+            <div>
+              <label htmlFor="careerGoal" className="text-sm font-medium">Your Career Goal</label>
+              <Input
+                id="careerGoal"
+                placeholder="e.g., 'Transition into a product management role'"
+                value={careerGoal}
+                onChange={(e) => setCareerGoal(e.target.value)}
+                className="mt-2"
               />
-              <FormField
-                control={form.control}
-                name="experience"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Your Experience / Resume</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Paste your resume or a summary of your work experience here."
-                        className="min-h-[200px]"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+            </div>
+            <div>
+              <label htmlFor="experience" className="text-sm font-medium">Your Experience / Resume</label>
+              <Textarea
+                id="experience"
+                placeholder="Paste your resume or a summary of your work experience here."
+                className="min-h-[200px] mt-2"
+                value={experience}
+                onChange={(e) => setExperience(e.target.value)}
               />
-            </CardContent>
-            <CardFooter>
-              <Button type="submit" disabled={isPending}>
-                {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {isPending ? 'Getting Advice...' : 'Get Career Advice'}
-              </Button>
-            </CardFooter>
-          </form>
-        </Form>
+            </div>
+          </CardContent>
+          <CardFooter>
+            <Button type="submit" disabled={isPending}>
+              {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isPending ? 'Getting Advice...' : 'Get Career Advice'}
+            </Button>
+          </CardFooter>
+        </form>
       </Card>
 
       {isPending && (

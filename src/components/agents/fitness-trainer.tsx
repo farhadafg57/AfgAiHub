@@ -1,9 +1,6 @@
-"use client";
+'use client';
 
 import { useState, useTransition } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import Link from 'next/link';
 import {
   FitnessPlanInput,
@@ -18,14 +15,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -38,39 +27,50 @@ import { HeartPulse, Dumbbell, Apple, HelpCircle, Loader2 } from 'lucide-react';
 import { Skeleton } from '../ui/skeleton';
 import { getFitnessPlanAction } from '@/app/actions/fitness-trainer-actions';
 
-const formSchema = z.object({
-  fitnessGoal: z.string().min(5, 'Please describe your goal.'),
-  fitnessLevel: z.enum(['beginner', 'intermediate', 'advanced']),
-  daysPerWeek: z.coerce.number().min(1).max(7),
-  availableEquipment: z.string().min(3, 'e.g., "none", "dumbbells", "full gym"'),
-});
-
 export default function FitnessTrainer() {
   const [isPending, startTransition] = useTransition();
   const [result, setResult] = useState<FitnessPlanOutput | null>(null);
-
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      fitnessGoal: '',
-      fitnessLevel: 'beginner',
-      daysPerWeek: 3,
-      availableEquipment: 'none',
-    },
+  const [formData, setFormData] = useState<FitnessPlanInput>({
+    fitnessGoal: '',
+    fitnessLevel: 'beginner',
+    daysPerWeek: 3,
+    availableEquipment: 'none',
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (formData.fitnessGoal.length < 5) {
+      alert('Please describe your goal.');
+      return;
+    }
+     if (formData.availableEquipment.length < 3) {
+      alert('e.g., "none", "dumbbells", "full gym"');
+      return;
+    }
     setResult(null);
     startTransition(async () => {
       try {
-        const response = await getFitnessPlanAction(values);
+        const response = await getFitnessPlanAction(formData);
         setResult(response);
       } catch (error) {
         console.error(error);
         alert("Failed to create fitness plan. Please try again.");
       }
     });
-  }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+  
+  const handleRangeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+     setFormData(prev => ({ ...prev, daysPerWeek: Number(e.target.value) }));
+  };
+
+  const handleSelectChange = (value: 'beginner' | 'intermediate' | 'advanced') => {
+    setFormData(prev => ({ ...prev, fitnessLevel: value }));
+  };
 
   return (
     <div className="space-y-6">
@@ -89,85 +89,49 @@ export default function FitnessTrainer() {
             </Link>
           </Button>
         </CardHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
-            <CardContent className="space-y-4">
-              <FormField
-                control={form.control}
-                name="fitnessGoal"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Primary Fitness Goal</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g., Lose weight, build muscle" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+        <form onSubmit={handleSubmit}>
+          <CardContent className="space-y-4">
+            <div>
+              <label className="text-sm font-medium">Primary Fitness Goal</label>
+              <Input name="fitnessGoal" value={formData.fitnessGoal} onChange={handleInputChange} placeholder="e.g., Lose weight, build muscle" className="mt-2" />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Current Fitness Level</label>
+              <Select onValueChange={handleSelectChange} defaultValue={formData.fitnessLevel}>
+                <SelectTrigger className="mt-2">
+                  <SelectValue placeholder="Select your fitness level" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="beginner">Beginner</SelectItem>
+                  <SelectItem value="intermediate">Intermediate</SelectItem>
+                  <SelectItem value="advanced">Advanced</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-sm font-medium">Workout Days Per Week: {formData.daysPerWeek}</label>
+              <Input
+                type="range"
+                min="1"
+                max="7"
+                step="1"
+                value={formData.daysPerWeek}
+                onChange={handleRangeChange}
+                className="mt-2"
               />
-               <FormField
-                control={form.control}
-                name="fitnessLevel"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Current Fitness Level</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select your fitness level" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="beginner">Beginner</SelectItem>
-                        <SelectItem value="intermediate">Intermediate</SelectItem>
-                        <SelectItem value="advanced">Advanced</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-               <FormField
-                control={form.control}
-                name="daysPerWeek"
-                render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Workout Days Per Week: {field.value}</FormLabel>
-                        <FormControl>
-                            <Input 
-                                type="range" 
-                                min="1" 
-                                max="7" 
-                                step="1" 
-                                {...field}
-                            />
-                        </FormControl>
-                        <FormMessage />
-                    </FormItem>
-                )}
-                />
-               <FormField
-                control={form.control}
-                name="availableEquipment"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Available Equipment</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g., Dumbbells, resistance bands, full gym" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </CardContent>
-            <CardFooter>
-              <Button type="submit" disabled={isPending}>
-                {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {isPending ? 'Generating Plan...' : 'Create My Plan'}
-              </Button>
-            </CardFooter>
-          </form>
-        </Form>
+            </div>
+            <div>
+              <label className="text-sm font-medium">Available Equipment</label>
+              <Input name="availableEquipment" value={formData.availableEquipment} onChange={handleInputChange} placeholder="e.g., Dumbbells, resistance bands, full gym" className="mt-2" />
+            </div>
+          </CardContent>
+          <CardFooter>
+            <Button type="submit" disabled={isPending}>
+              {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isPending ? 'Generating Plan...' : 'Create My Plan'}
+            </Button>
+          </CardFooter>
+        </form>
       </Card>
 
       {isPending && (

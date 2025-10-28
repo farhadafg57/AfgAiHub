@@ -1,12 +1,8 @@
-"use client";
+'use client';
 
 import { useState, useTransition } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import Link from 'next/link';
 import {
-  GetPropertyInformationInput,
   GetPropertyInformationOutput,
 } from '@/ai/flows/real-estate-agent-property-information';
 import { Button } from '@/components/ui/button';
@@ -18,49 +14,39 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Home, HelpCircle, Loader2 } from 'lucide-react';
 import { Skeleton } from '../ui/skeleton';
 import { getPropertyInfoAction } from '@/app/actions/real-estate-agent-actions';
 
-const formSchema = z.object({
-  propertyAddress: z.string().min(5, 'Please enter a valid address.'),
-  userQuestion: z.string().min(10, 'Please ask a more detailed question.'),
-});
-
 export default function RealEstateAgent() {
   const [isPending, startTransition] = useTransition();
   const [result, setResult] = useState<GetPropertyInformationOutput | null>(null);
+  const [propertyAddress, setPropertyAddress] = useState('');
+  const [userQuestion, setUserQuestion] = useState('');
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      propertyAddress: '',
-      userQuestion: '',
-    },
-  });
-
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (propertyAddress.length < 5) {
+      alert('Please enter a valid address.');
+      return;
+    }
+    if (userQuestion.length < 10) {
+      alert('Please ask a more detailed question.');
+      return;
+    }
     setResult(null);
     startTransition(async () => {
       try {
-        const response = await getPropertyInfoAction(values);
+        const response = await getPropertyInfoAction({ propertyAddress, userQuestion });
         setResult(response);
       } catch (error) {
         console.error(error);
         alert("Failed to get property information. Please try again.");
       }
     });
-  }
+  };
 
   return (
     <div className="space-y-6">
@@ -80,47 +66,36 @@ export default function RealEstateAgent() {
             </Link>
           </Button>
         </CardHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
-            <CardContent className="space-y-4">
-              <FormField
-                control={form.control}
-                name="propertyAddress"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Property Address</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g., 123 Main St, Anytown, USA" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+        <form onSubmit={handleSubmit}>
+          <CardContent className="space-y-4">
+            <div>
+              <label htmlFor="propertyAddress" className="text-sm font-medium">Property Address</label>
+              <Input
+                id="propertyAddress"
+                placeholder="e.g., 123 Main St, Anytown, USA"
+                value={propertyAddress}
+                onChange={(e) => setPropertyAddress(e.target.value)}
+                className="mt-2"
               />
-              <FormField
-                control={form.control}
-                name="userQuestion"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Your Question</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="e.g., 'What are the nearby schools and their ratings?'"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+            </div>
+            <div>
+              <label htmlFor="userQuestion" className="text-sm font-medium">Your Question</label>
+              <Textarea
+                id="userQuestion"
+                placeholder="e.g., 'What are the nearby schools and their ratings?'"
+                value={userQuestion}
+                onChange={(e) => setUserQuestion(e.target.value)}
+                className="mt-2"
               />
-            </CardContent>
-            <CardFooter>
-              <Button type="submit" disabled={isPending}>
-                {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {isPending ? 'Searching...' : 'Get Information'}
-              </Button>
-            </CardFooter>
-          </form>
-        </Form>
+            </div>
+          </CardContent>
+          <CardFooter>
+            <Button type="submit" disabled={isPending}>
+              {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isPending ? 'Searching...' : 'Get Information'}
+            </Button>
+          </CardFooter>
+        </form>
       </Card>
 
       {isPending && (

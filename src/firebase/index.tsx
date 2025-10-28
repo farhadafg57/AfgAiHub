@@ -2,11 +2,11 @@
 
 import { firebaseConfig } from '@/firebase/config';
 import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app';
-import { getAuth, onAuthStateChanged, type User, type Auth } from 'firebase/auth';
+import { getAuth, type Auth } from 'firebase/auth';
 import { getFirestore, type Firestore } from 'firebase/firestore';
 import { getFunctions, type Functions } from 'firebase/functions';
 import { getStorage, type FirebaseStorage } from 'firebase/storage';
-import React, { createContext, useContext, type ReactNode, useMemo, useState, useEffect } from 'react';
+import React, { createContext, useContext, type ReactNode, useMemo } from 'react';
 
 let firebaseApp: FirebaseApp;
 
@@ -20,8 +20,6 @@ const auth = getAuth(firebaseApp);
 const firestore = getFirestore(firebaseApp);
 const storage = getStorage(firebaseApp);
 const functions = getFunctions(firebaseApp);
-
-export { firebaseApp, auth, firestore, storage, functions };
 
 // --- React Context and Provider ---
 
@@ -79,28 +77,4 @@ export const useFirebaseApp = (): FirebaseApp => {
 
 export const useStorage = (): FirebaseStorage => {
   return useFirebase().storage;
-};
-
-export const useUser = () => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(
-      auth,
-      (firebaseUser) => {
-        setUser(firebaseUser);
-        setIsLoading(false);
-      },
-      (error) => {
-        console.error("useUser: onAuthStateChanged error:", error);
-        setError(error);
-        setIsLoading(false);
-      }
-    );
-    return () => unsubscribe();
-  }, []);
-
-  return { user, isLoading, error };
 };

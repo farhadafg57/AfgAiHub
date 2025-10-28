@@ -1,12 +1,8 @@
-"use client";
+'use client';
 
 import { useState, useTransition } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import Link from 'next/link';
 import {
-  AppPrototyperInput,
   AppPrototyperOutput,
 } from '@/ai/flows/app-prototyper-initial-code-generation';
 import { Button } from '@/components/ui/button';
@@ -18,34 +14,16 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
 import { AppWindow, Copy, Check, HelpCircle, Loader2 } from 'lucide-react';
 import { Skeleton } from '../ui/skeleton';
 import { getAppCodeAction } from '@/app/actions/app-prototyper-actions';
 
-const formSchema = z.object({
-  description: z.string().min(20, 'Please provide a more detailed description of your app idea.'),
-});
-
 export default function AppPrototyper() {
   const [isPending, startTransition] = useTransition();
   const [result, setResult] = useState<AppPrototyperOutput | null>(null);
   const [copied, setCopied] = useState(false);
-
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      description: '',
-    },
-  });
+  const [description, setDescription] = useState('');
 
   const handleCopy = () => {
     if (result) {
@@ -55,18 +33,23 @@ export default function AppPrototyper() {
     }
   };
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (description.length < 20) {
+      alert('Please provide a more detailed description of your app idea.');
+      return;
+    }
     setResult(null);
     startTransition(async () => {
       try {
-        const response = await getAppCodeAction(values);
+        const response = await getAppCodeAction({ description });
         setResult(response);
       } catch (error) {
         console.error(error);
         alert("Failed to generate code. Please try again.");
       }
     });
-  }
+  };
 
   return (
     <div className="space-y-6">
@@ -86,35 +69,26 @@ export default function AppPrototyper() {
             </Link>
           </Button>
         </CardHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
-            <CardContent>
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>App Description</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="e.g., 'A simple to-do list app with features to add, remove, and mark tasks as complete.'"
-                        className="min-h-[150px] font-code"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+        <form onSubmit={handleSubmit}>
+          <CardContent>
+            <div>
+              <label htmlFor="description" className="text-sm font-medium">App Description</label>
+              <Textarea
+                id="description"
+                placeholder="e.g., 'A simple to-do list app with features to add, remove, and mark tasks as complete.'"
+                className="min-h-[150px] font-code mt-2"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
               />
-            </CardContent>
-            <CardFooter>
-              <Button type="submit" disabled={isPending}>
-                {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {isPending ? 'Generating Code...' : 'Generate Code'}
-              </Button>
-            </CardFooter>
-          </form>
-        </Form>
+            </div>
+          </CardContent>
+          <CardFooter>
+            <Button type="submit" disabled={isPending}>
+              {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isPending ? 'Generating Code...' : 'Generate Code'}
+            </Button>
+          </CardFooter>
+        </form>
       </Card>
 
       {isPending && (

@@ -1,9 +1,6 @@
-"use client";
+'use client';
 
-import { useState, useTransition } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import { useState, useTransition, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
@@ -19,39 +16,20 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Gem, Upload, DollarSign, Key, Microscope, HelpCircle, Loader2 } from 'lucide-react';
 import { Skeleton } from '../ui/skeleton';
 import { authenticateAction } from '@/app/actions/antique-authenticator-actions';
 
-const formSchema = z.object({
-  photoDataUri: z.string().refine((val) => val.startsWith('data:image/'), {
-    message: 'Please upload an image file.',
-  }),
-  additionalDetails: z.string().optional(),
-});
-
 export default function AntiqueAuthenticator() {
   const [isPending, startTransition] = useTransition();
   const [result, setResult] = useState<AuthenticateAntiqueOutput | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
+  const [photoDataUri, setPhotoDataUri] = useState('');
+  const [additionalDetails, setAdditionalDetails] = useState('');
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      photoDataUri: '',
-      additionalDetails: '',
-    },
-  });
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -59,25 +37,30 @@ export default function AntiqueAuthenticator() {
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64String = reader.result as string;
-        form.setValue('photoDataUri', base64String, { shouldValidate: true });
+        setPhotoDataUri(base64String);
         setPreview(base64String);
       };
       reader.readAsDataURL(file);
     }
   };
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!photoDataUri) {
+      alert('Please upload an image.');
+      return;
+    }
     setResult(null);
     startTransition(async () => {
       try {
-        const response = await authenticateAction(values);
+        const response = await authenticateAction({ photoDataUri, additionalDetails });
         setResult(response);
       } catch (error) {
         console.error(error);
         alert("Failed to authenticate the antique. Please try again.");
       }
     });
-  }
+  };
 
   return (
     <div className="space-y-6">
@@ -96,56 +79,39 @@ export default function AntiqueAuthenticator() {
             </Link>
           </Button>
         </CardHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
-            <CardContent className="space-y-4">
-              <FormField
-                control={form.control}
-                name="photoDataUri"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Antique Photo</FormLabel>
-                    <FormControl>
-                      <div className="flex items-center gap-4">
-                        <div className="w-24 h-24 bg-muted rounded-md flex items-center justify-center">
-                          {preview ? (
-                            <Image src={preview} alt="Antique preview" width={96} height={96} className="object-cover rounded-md" />
-                          ) : (
-                            <Upload className="h-8 w-8 text-muted-foreground" />
-                          )}
-                        </div>
-                        <Input type="file" accept="image/*" onChange={handleFileChange} className="flex-1" />
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+        <form onSubmit={handleSubmit}>
+          <CardContent className="space-y-4">
+            <div>
+              <label htmlFor="photo" className="text-sm font-medium">Antique Photo</label>
+              <div className="flex items-center gap-4 mt-2">
+                <div className="w-24 h-24 bg-muted rounded-md flex items-center justify-center">
+                  {preview ? (
+                    <Image src={preview} alt="Antique preview" width={96} height={96} className="object-cover rounded-md" />
+                  ) : (
+                    <Upload className="h-8 w-8 text-muted-foreground" />
+                  )}
+                </div>
+                <Input id="photo" type="file" accept="image/*" onChange={handleFileChange} ref={fileInputRef} className="flex-1" />
+              </div>
+            </div>
+            <div>
+              <label htmlFor="details" className="text-sm font-medium">Additional Details</label>
+              <Textarea
+                id="details"
+                placeholder="e.g., 'Found in grandmother\'s attic. Has a small chip on the base. Any maker\'s marks?'"
+                value={additionalDetails}
+                onChange={(e) => setAdditionalDetails(e.target.value)}
+                className="mt-2"
               />
-              <FormField
-                control={form.control}
-                name="additionalDetails"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Additional Details</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="e.g., 'Found in grandmother\'s attic. Has a small chip on the base. Any maker\'s marks?'"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </CardContent>
-            <CardFooter>
-              <Button type="submit" disabled={isPending}>
-                {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {isPending ? 'Analyzing...' : 'Authenticate'}
-              </Button>
-            </CardFooter>
-          </form>
-        </Form>
+            </div>
+          </CardContent>
+          <CardFooter>
+            <Button type="submit" disabled={isPending}>
+              {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isPending ? 'Analyzing...' : 'Authenticate'}
+            </Button>
+          </CardFooter>
+        </form>
       </Card>
 
       {isPending && (

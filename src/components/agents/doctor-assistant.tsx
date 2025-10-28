@@ -1,12 +1,8 @@
-"use client";
+'use client';
 
 import { useState, useTransition } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import Link from 'next/link';
 import {
-  PreliminaryMedicalInformationInput,
   PreliminaryMedicalInformationOutput,
 } from '@/ai/flows/doctor-assistant-preliminary-information';
 import { Button } from '@/components/ui/button';
@@ -18,47 +14,34 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertTriangle, Stethoscope, HelpCircle, Loader2 } from 'lucide-react';
 import { Skeleton } from '../ui/skeleton';
 import { getMedicalInfoAction } from '@/app/actions/doctor-assistant-actions';
 
-const formSchema = z.object({
-  symptoms: z.string().min(20, 'Please describe your symptoms in more detail.'),
-});
-
 export default function DoctorAssistant() {
   const [isPending, startTransition] = useTransition();
   const [result, setResult] = useState<PreliminaryMedicalInformationOutput | null>(null);
+  const [symptoms, setSymptoms] = useState('');
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      symptoms: '',
-    },
-  });
-
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (symptoms.length < 20) {
+      alert('Please describe your symptoms in more detail.');
+      return;
+    }
     setResult(null);
     startTransition(async () => {
       try {
-        const response = await getMedicalInfoAction(values);
+        const response = await getMedicalInfoAction({ symptoms });
         setResult(response);
       } catch (error) {
         console.error(error);
         alert("Failed to get medical information. Please try again.");
       }
     });
-  }
+  };
 
   return (
     <div className="space-y-6">
@@ -78,35 +61,26 @@ export default function DoctorAssistant() {
             </Link>
           </Button>
         </CardHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
-            <CardContent>
-              <FormField
-                control={form.control}
-                name="symptoms"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Your Symptoms</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="e.g., 'I have a sore throat, a mild fever, and a headache...'"
-                        className="min-h-[120px]"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+        <form onSubmit={handleSubmit}>
+          <CardContent>
+            <div>
+              <label htmlFor="symptoms" className="text-sm font-medium">Your Symptoms</label>
+              <Textarea
+                id="symptoms"
+                placeholder="e.g., 'I have a sore throat, a mild fever, and a headache...'"
+                className="min-h-[120px] mt-2"
+                value={symptoms}
+                onChange={(e) => setSymptoms(e.target.value)}
               />
-            </CardContent>
-            <CardFooter>
-              <Button type="submit" disabled={isPending}>
-                {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {isPending ? 'Analyzing Symptoms...' : 'Analyze Symptoms'}
-              </Button>
-            </CardFooter>
-          </form>
-        </Form>
+            </div>
+          </CardContent>
+          <CardFooter>
+            <Button type="submit" disabled={isPending}>
+              {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isPending ? 'Analyzing Symptoms...' : 'Analyze Symptoms'}
+            </Button>
+          </CardFooter>
+        </form>
       </Card>
 
       {isPending && (

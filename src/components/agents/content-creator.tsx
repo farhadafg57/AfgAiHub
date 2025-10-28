@@ -1,13 +1,10 @@
-"use client";
+'use client';
 
 import { useState, useTransition } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import Link from 'next/link';
 import {
-  ContentCreatorInput,
   ContentCreatorOutput,
+  ContentCreatorInput,
 } from '@/ai/flows/content-creator-flow';
 import { Button } from '@/components/ui/button';
 import {
@@ -18,14 +15,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -38,37 +27,45 @@ import { PenSquare, Lightbulb, FileText, HelpCircle, Loader2 } from 'lucide-reac
 import { Skeleton } from '../ui/skeleton';
 import { getContentIdeasAction } from '@/app/actions/content-creator-actions';
 
-const formSchema = z.object({
-  topic: z.string().min(3, 'Please enter a topic.'),
-  contentType: z.enum(['blog_post', 'tweet_thread', 'video_script']),
-  targetAudience: z.string().min(3, 'Please describe the target audience.'),
-});
-
 export default function ContentCreator() {
   const [isPending, startTransition] = useTransition();
   const [result, setResult] = useState<ContentCreatorOutput | null>(null);
-
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      topic: '',
-      contentType: 'blog_post',
-      targetAudience: '',
-    },
+  const [formData, setFormData] = useState<ContentCreatorInput>({
+    topic: '',
+    contentType: 'blog_post',
+    targetAudience: '',
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (formData.topic.length < 3) {
+      alert('Please enter a topic.');
+      return;
+    }
+    if (formData.targetAudience.length < 3) {
+      alert('Please describe the target audience.');
+      return;
+    }
     setResult(null);
     startTransition(async () => {
       try {
-        const response = await getContentIdeasAction(values);
+        const response = await getContentIdeasAction(formData);
         setResult(response);
       } catch (error) {
         console.error(error);
         alert("Failed to generate content. Please try again.");
       }
     });
-  }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSelectChange = (value: 'blog_post' | 'tweet_thread' | 'video_script') => {
+    setFormData(prev => ({ ...prev, contentType: value }));
+  };
 
   return (
     <div className="space-y-6">
@@ -87,66 +84,49 @@ export default function ContentCreator() {
             </Link>
           </Button>
         </CardHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
+        <form onSubmit={handleSubmit}>
+          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label htmlFor="topic" className="text-sm font-medium">Topic</label>
+              <Input
+                id="topic"
                 name="topic"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Topic</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g., 'The Future of AI'" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                placeholder="e.g., 'The Future of AI'"
+                value={formData.topic}
+                onChange={handleInputChange}
               />
-               <FormField
-                control={form.control}
-                name="contentType"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Content Format</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a format" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="blog_post">Blog Post</SelectItem>
-                        <SelectItem value="tweet_thread">Tweet Thread</SelectItem>
-                        <SelectItem value="video_script">Video Script</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-               <FormField
-                control={form.control}
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Content Format</label>
+              <Select onValueChange={handleSelectChange} defaultValue={formData.contentType}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a format" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="blog_post">Blog Post</SelectItem>
+                  <SelectItem value="tweet_thread">Tweet Thread</SelectItem>
+                  <SelectItem value="video_script">Video Script</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="md:col-span-2 space-y-2">
+              <label htmlFor="targetAudience" className="text-sm font-medium">Target Audience</label>
+              <Input
+                id="targetAudience"
                 name="targetAudience"
-                render={({ field }) => (
-                  <FormItem className="md:col-span-2">
-                    <FormLabel>Target Audience</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g., Tech enthusiasts, beginners in marketing" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                placeholder="e.g., Tech enthusiasts, beginners in marketing"
+                value={formData.targetAudience}
+                onChange={handleInputChange}
               />
-            </CardContent>
-            <CardFooter>
-              <Button type="submit" disabled={isPending}>
-                {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {isPending ? 'Generating...' : 'Generate Content'}
-              </Button>
-            </CardFooter>
-          </form>
-        </Form>
+            </div>
+          </CardContent>
+          <CardFooter>
+            <Button type="submit" disabled={isPending}>
+              {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isPending ? 'Generating...' : 'Generate Content'}
+            </Button>
+          </CardFooter>
+        </form>
       </Card>
 
       {isPending && (

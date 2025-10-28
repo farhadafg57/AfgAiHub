@@ -2,7 +2,8 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth, useUser } from '@/firebase';
+import { useAuth } from '@/firebase';
+import { useUser } from '@/hooks/useUser';
 import {
   GoogleAuthProvider,
   signInWithPopup,
@@ -33,7 +34,7 @@ export default function LoginPage() {
   const handleSignIn = async () => {
     try {
       await signInWithPopup(auth, provider);
-      // The onAuthStateChanged listener in FirebaseProvider will handle the redirect
+      // The onAuthStateChanged listener in useUser hook will handle the redirect
     } catch (error) {
       console.error('Error signing in with Google:', error);
     }

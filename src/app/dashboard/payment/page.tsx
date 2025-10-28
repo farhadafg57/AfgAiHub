@@ -10,31 +10,26 @@ import {
   CardDescription,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { usePayment } from '@/hooks/usePayment';
 import { Loader2 } from 'lucide-react';
-import { useUser } from '@/firebase';
+import { useUser } from '@/hooks/useUser';
 
 export default function PaymentPage() {
   const { user } = useUser();
   const [isPending, startTransition] = useTransition();
-  // The hook now encapsulates all the complex logic.
-  const { createPaymentSession, error } = usePayment();
 
   const handleUpgrade = () => {
     startTransition(async () => {
       if (!user?.email) {
-        // In a real app, you'd handle this more gracefully.
         alert("User email is not available.");
         return;
       }
-      const paymentData = {
-        email: user.email,
-        items: [{ id: 'premium-plan', name: 'AfgAiHub Premium', price: 1000 }],
-        // Example redirect URLs can be passed here if needed
-        // redirectSuccess: `${window.location.origin}/payment-success`,
-        // redirectFailure: `${window.location.origin}/payment-failure`,
-      };
-      await createPaymentSession(paymentData);
+      // The payment creation logic will be handled by a server action in a future step.
+      // For now, this is a placeholder.
+      console.log('Creating payment session for:', user.email);
+      // Simulate network request
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      alert('Payment redirection logic not implemented yet.');
+
     });
   };
 
@@ -70,9 +65,6 @@ export default function PaymentPage() {
                     'Upgrade to Premium'
                   )}
                 </Button>
-                {error && (
-                  <p className="text-sm text-destructive">{error}</p>
-                )}
                 <p className="text-center text-xs text-muted-foreground">
                   You will be redirected to HesabPay to complete your secure
                   payment.

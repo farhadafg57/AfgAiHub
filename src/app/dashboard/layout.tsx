@@ -2,12 +2,12 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { useUser } from '@/firebase';
+import { useUser } from '@/hooks/useUser';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/layout/sidebar';
 import { BrainCircuit } from 'lucide-react';
 
-function DashboardLayoutContent({
+export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -37,15 +37,4 @@ function DashboardLayoutContent({
       </div>
     </SidebarProvider>
   );
-}
-
-
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-    return (
-      <DashboardLayoutContent>{children}</DashboardLayoutContent>
-    )
 }

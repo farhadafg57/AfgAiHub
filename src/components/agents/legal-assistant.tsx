@@ -1,12 +1,8 @@
-"use client";
+'use client';
 
 import { useState, useTransition } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import Link from 'next/link';
 import {
-  LegalInformationInput,
   LegalInformationOutput,
 } from '@/ai/flows/legal-assistant-flow';
 import { Button } from '@/components/ui/button';
@@ -18,47 +14,34 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertTriangle, Scale, HelpCircle, Loader2 } from 'lucide-react';
 import { Skeleton } from '../ui/skeleton';
 import { getLegalInfoAction } from '@/app/actions/legal-assistant-actions';
 
-const formSchema = z.object({
-  legalQuery: z.string().min(15, 'Please describe your legal question in more detail.'),
-});
-
 export default function LegalAssistant() {
   const [isPending, startTransition] = useTransition();
   const [result, setResult] = useState<LegalInformationOutput | null>(null);
+  const [legalQuery, setLegalQuery] = useState('');
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      legalQuery: '',
-    },
-  });
-
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (legalQuery.length < 15) {
+      alert('Please describe your legal question in more detail.');
+      return;
+    }
     setResult(null);
     startTransition(async () => {
       try {
-        const response = await getLegalInfoAction(values);
+        const response = await getLegalInfoAction({ legalQuery });
         setResult(response);
       } catch (error) {
         console.error(error);
         alert("Failed to get legal information. Please try again.");
       }
     });
-  }
+  };
 
   return (
     <div className="space-y-6">
@@ -77,35 +60,26 @@ export default function LegalAssistant() {
             </Link>
           </Button>
         </CardHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
-            <CardContent>
-              <FormField
-                control={form.control}
-                name="legalQuery"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Your Legal Question</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="e.g., 'What are the basic steps to create a simple will?'"
-                        className="min-h-[120px]"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+        <form onSubmit={handleSubmit}>
+          <CardContent>
+            <div>
+              <label htmlFor="legalQuery" className="text-sm font-medium">Your Legal Question</label>
+              <Textarea
+                id="legalQuery"
+                placeholder="e.g., 'What are the basic steps to create a simple will?'"
+                className="min-h-[120px] mt-2"
+                value={legalQuery}
+                onChange={(e) => setLegalQuery(e.target.value)}
               />
-            </CardContent>
-            <CardFooter>
-              <Button type="submit" disabled={isPending}>
-                {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {isPending ? 'Analyzing...' : 'Get Information'}
-              </Button>
-            </CardFooter>
-          </form>
-        </Form>
+            </div>
+          </CardContent>
+          <CardFooter>
+            <Button type="submit" disabled={isPending}>
+              {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isPending ? 'Analyzing...' : 'Get Information'}
+            </Button>
+          </CardFooter>
+        </form>
       </Card>
 
       {isPending && (
