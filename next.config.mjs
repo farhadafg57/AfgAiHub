@@ -4,9 +4,6 @@ const withNextIntl = createNextIntlPlugin();
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    serverActions: true,
-  },
   images: {
     formats: ['image/avif', 'image/webp'],
     remotePatterns: [
@@ -17,8 +14,11 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: 'i.pravatar.cc',
-      },
+      }
     ],
+  },
+  compiler: {
+    reactRemoveProperties: true,
   },
 };
 
