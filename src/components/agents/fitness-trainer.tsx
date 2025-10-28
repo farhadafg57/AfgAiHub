@@ -41,7 +41,7 @@ import { getFitnessPlanAction } from '@/app/actions/fitness-trainer-actions';
 const formSchema = z.object({
   fitnessGoal: z.string().min(5, 'Please describe your goal.'),
   fitnessLevel: z.enum(['beginner', 'intermediate', 'advanced']),
-  daysPerWeek: z.number().min(1).max(7),
+  daysPerWeek: z.coerce.number().min(1).max(7),
   availableEquipment: z.string().min(3, 'e.g., "none", "dumbbells", "full gym"'),
 });
 
@@ -139,8 +139,7 @@ export default function FitnessTrainer() {
                                 min="1" 
                                 max="7" 
                                 step="1" 
-                                {...field} 
-                                onChange={e => field.onChange(parseInt(e.target.value))}
+                                {...field}
                             />
                         </FormControl>
                         <FormMessage />
@@ -163,7 +162,7 @@ export default function FitnessTrainer() {
             </CardContent>
             <CardFooter>
               <Button type="submit" disabled={isPending}>
-                {isPending && <Loader2 className="animate-spin" />}
+                {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {isPending ? 'Generating Plan...' : 'Create My Plan'}
               </Button>
             </CardFooter>

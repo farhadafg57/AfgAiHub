@@ -100,7 +100,7 @@ export default function QuranTutor() {
             </CardContent>
             <CardFooter>
               <Button type="submit" disabled={isPending}>
-                {isPending && <Loader2 className="animate-spin" />}
+                {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {isPending ? 'Getting Guidance...' : 'Get Guidance'}
               </Button>
             </CardFooter>

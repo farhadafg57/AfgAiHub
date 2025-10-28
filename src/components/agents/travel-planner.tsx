@@ -172,7 +172,7 @@ export default function TravelPlanner() {
             </CardContent>
             <CardFooter>
               <Button type="submit" disabled={isPending}>
-                {isPending && <Loader2 className="animate-spin" />}
+                {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {isPending ? 'Planning...' : 'Create Itinerary'}
               </Button>
             </CardFooter>
@@ -209,7 +209,7 @@ export default function TravelPlanner() {
                 <Map className="h-5 w-5 text-muted-foreground"/>
                 <h3 className="text-lg font-semibold font-headline">Day-by-Day Itinerary</h3>
               </div>
-              <p className="whitespace-pre-wrap text-muted-foreground prose prose-sm dark:prose-invert max-w-none">{result.itinerary}</p>
+              <div className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground" dangerouslySetInnerHTML={{ __html: result.itinerary.replace(/\n/g, '<br />') }} />
             </div>
              <div>
               <div className="flex items-center gap-2 mb-2">

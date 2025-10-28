@@ -31,9 +31,6 @@ interface FirebaseContextValue {
   auth: Auth;
   storage: FirebaseStorage;
   functions: Functions;
-  user: User | null;
-  isLoading: boolean;
-  error: Error | null;
 }
 
 export const FirebaseContext = createContext<FirebaseContextValue | undefined>(undefined);
@@ -41,37 +38,14 @@ export const FirebaseContext = createContext<FirebaseContextValue | undefined>(u
 export const FirebaseProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(
-      auth,
-      (firebaseUser) => {
-        setUser(firebaseUser);
-        setIsLoading(false);
-      },
-      (error) => {
-        console.error("FirebaseProvider: onAuthStateChanged error:", error);
-        setError(error);
-        setIsLoading(false);
-      }
-    );
-    return () => unsubscribe();
-  }, []);
-
   const contextValue = useMemo((): FirebaseContextValue => ({
       firebaseApp,
       firestore,
       auth,
       storage,
       functions,
-      user,
-      isLoading,
-      error,
     }),
-    [user, isLoading, error]
+    []
   );
 
   return (
@@ -80,7 +54,6 @@ export const FirebaseProvider: React.FC<{ children: ReactNode }> = ({
     </FirebaseContext.Provider>
   );
 };
-
 
 // --- Hooks ---
 
@@ -109,5 +82,25 @@ export const useStorage = (): FirebaseStorage => {
 };
 
 export const useUser = () => {
-  return useFirebase();
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(
+      auth,
+      (firebaseUser) => {
+        setUser(firebaseUser);
+        setIsLoading(false);
+      },
+      (error) => {
+        console.error("useUser: onAuthStateChanged error:", error);
+        setError(error);
+        setIsLoading(false);
+      }
+    );
+    return () => unsubscribe();
+  }, []);
+
+  return { user, isLoading, error };
 };

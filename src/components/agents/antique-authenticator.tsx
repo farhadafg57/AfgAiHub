@@ -140,7 +140,7 @@ export default function AntiqueAuthenticator() {
             </CardContent>
             <CardFooter>
               <Button type="submit" disabled={isPending}>
-                {isPending && <Loader2 className="animate-spin" />}
+                {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {isPending ? 'Analyzing...' : 'Authenticate'}
               </Button>
             </CardFooter>

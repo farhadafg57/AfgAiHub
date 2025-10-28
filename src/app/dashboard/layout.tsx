@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { useUser, FirebaseProvider } from '@/firebase';
+import { useUser } from '@/firebase';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/layout/sidebar';
 import { BrainCircuit } from 'lucide-react';
@@ -46,8 +46,6 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
     return (
-        <FirebaseProvider>
-            <DashboardLayoutContent>{children}</DashboardLayoutContent>
-        </FirebaseProvider>
+      <DashboardLayoutContent>{children}</DashboardLayoutContent>
     )
 }
