@@ -12,6 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { useUser } from '@/hooks/useUser';
+import { createPaymentSessionAction } from '@/app/actions/payment-actions';
 
 export default function PaymentPage() {
   const { user } = useUser();
@@ -20,16 +21,20 @@ export default function PaymentPage() {
   const handleUpgrade = () => {
     startTransition(async () => {
       if (!user?.email) {
-        alert("User email is not available.");
+        alert('User email is not available. Please ensure you are logged in.');
         return;
       }
-      // The payment creation logic will be handled by a server action in a future step.
-      // For now, this is a placeholder.
-      console.log('Creating payment session for:', user.email);
-      // Simulate network request
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      alert('Payment redirection logic not implemented yet.');
+      
+      const successUrl = `${window.location.origin}/payment/success`;
+      const failUrl = `${window.location.origin}/payment/fail`;
 
+      const result = await createPaymentSessionAction(user.email, successUrl, failUrl);
+
+      if (result.checkout_url) {
+        window.location.href = result.checkout_url;
+      } else {
+        alert(`Could not initiate payment: ${result.error}`);
+      }
     });
   };
 
@@ -48,12 +53,14 @@ export default function PaymentPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <p>
-                  Get unlimited access to all our AI agents and features.
-                </p>
+                <ul className="list-disc list-inside text-sm text-muted-foreground space-y-2">
+                  <li>Unlimited access to all 10 AI agents.</li>
+                  <li>Priority support and feature requests.</li>
+                  <li>Early access to new and upcoming AI agents.</li>
+                </ul>
                 <Button
                   onClick={handleUpgrade}
-                  disabled={isPending}
+                  disabled={isPending || !user}
                   className="w-full"
                 >
                   {isPending ? (
