@@ -5,8 +5,6 @@ import {
   JetBrains_Mono,
   Inter,
 } from 'next/font/google';
-import { NextIntlClientProvider } from 'next-intl';
-import { getMessages } from 'next-intl/server';
 
 import './globals.css';
 import { cn } from '@/lib/utils';
@@ -44,18 +42,14 @@ const jetbrainsMono = JetBrains_Mono({
   weight: ['400', '500', '700'],
 });
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
-  params: { locale },
 }: Readonly<{
   children: React.ReactNode;
-  params: { locale: string };
 }>) {
-  const messages = await getMessages();
-
   return (
     <html
-      lang={locale}
+      lang="en"
       className={cn(
         'dark',
         inter.variable,
@@ -65,9 +59,7 @@ export default async function RootLayout({
       )}
     >
       <body className="font-sans antialiased">
-        <NextIntlClientProvider messages={messages}>
-          <FirebaseProvider>{children}</FirebaseProvider>
-        </NextIntlClientProvider>
+        <FirebaseProvider>{children}</FirebaseProvider>
       </body>
     </html>
   );
