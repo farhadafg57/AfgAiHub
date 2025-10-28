@@ -15,6 +15,12 @@ export const metadata: Metadata = {
   description: 'A modular AI ecosystem with multiple agents.',
 };
 
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-sans',
+});
+
 const poppins = Poppins({
   subsets: ['latin'],
   display: 'swap',
@@ -36,12 +42,6 @@ const jetbrainsMono = JetBrains_Mono({
   weight: ['400', '500', '700'],
 });
 
-const inter = Inter({
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-inter',
-});
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -58,7 +58,7 @@ export default function RootLayout({
         jetbrainsMono.variable
       )}
     >
-      <body className="font-body antialiased">
+      <body className="font-sans antialiased">
         <FirebaseProvider>
           {children}
         </FirebaseProvider>

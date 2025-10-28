@@ -11,9 +11,9 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        body: ['Poppins', 'sans-serif'],
+        sans: ['var(--font-sans)', 'sans-serif'],
+        body: ['var(--font-poppins)', 'sans-serif'],
         headline: ['"Space Grotesk"', 'sans-serif'],
-        sans: ['Poppins', 'sans-serif'],
         code: ['"JetBrains Mono"', 'monospace'],
       },
       colors: {
