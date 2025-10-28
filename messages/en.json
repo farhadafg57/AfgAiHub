@@ -1,0 +1,85 @@
+{
+  "LandingPage": {
+    "header": {
+      "login": "Log In",
+      "getStarted": "Get Started Free"
+    },
+    "hero": {
+      "badge": "Now with 10 Specialized AI Agents",
+      "title": "Your AI-Powered Copilot for Modern Problems",
+      "subtitle": "AfgAiHub is a modular ecosystem of specialized AI agents designed to solve complex tasks, boost your productivity, and unlock your creative potential.",
+      "cta": "Explore Agents Now"
+    },
+    "why": {
+      "title": "Why AfgAiHub?",
+      "subtitle": "Go beyond generic chatbots. Our specialized agents provide expert-level assistance across a variety of domains.",
+      "reasons": [
+        {
+          "title": "Save Time & Effort",
+          "description": "Automate tedious tasks like research, drafting, and planning. Get instant, high-quality results and focus on what truly matters."
+        },
+        {
+          "title": "Boost Creativity",
+          "description": "Overcome creative blocks with endless ideas for content, app prototypes, and more. Your AI partner for brainstorming and creation."
+        },
+        {
+          "title": "Make Informed Decisions",
+          "description": "From preliminary legal information to medical symptom analysis, get structured data to make better, more informed choices."
+        }
+      ]
+    },
+    "agents": {
+      "title": "Meet Your Team of AI Agents"
+    },
+    "agentNames": {
+      "quran-tutor": "Quran Tutor",
+      "doctor-assistant": "Doctor Assistant",
+      "real-estate-agent": "Real Estate Agent",
+      "app-prototyper": "App Prototyper",
+      "antique-authenticator": "Antique Authenticator",
+      "legal-assistant": "Legal Assistant",
+      "career-coach": "Career Coach",
+      "travel-planner": "Travel Planner",
+      "fitness-trainer": "Fitness Trainer",
+      "content-creator": "Content Creator"
+    },
+    "agentDescriptions": {
+      "quran-tutor": "Spiritual guidance and knowledge from the Quran.",
+      "doctor-assistant": "Preliminary medical information and assistance.",
+      "real-estate-agent": "Real estate inquiries and property information.",
+      "app-prototyper": "Prompt-to-app builder for generating prototypes.",
+      "antique-authenticator": "Analyzes images of antiques for authentication.",
+      "legal-assistant": "Preliminary legal information and simple document drafting.",
+      "career-coach": "Get career advice, resume feedback, and job search strategies.",
+      "travel-planner": "Creates personalized travel itineraries and provides recommendations.",
+      "fitness-trainer": "Designs custom workout plans and offers fitness advice.",
+      "content-creator": "Generates content ideas, drafts articles, and suggests social media posts."
+    },
+    "testimonials": {
+      "title": "What Our Users Say",
+      "0": {
+        "quote": "The Career Coach agent gave me the confidence to apply for a management role. The resume feedback was invaluable, and I got the job!",
+        "name": "John D.",
+        "role": "Newly Promoted Manager"
+      },
+      "1": {
+        "quote": "I used the Travel Planner for my trip to Japan. The itinerary was flawless and saved me hours of research. The restaurant recommendations were spot-on.",
+        "name": "Aisha S.",
+        "role": "Travel Enthusiast"
+      },
+      "2": {
+        "quote": "As a student, the Quran Tutor is like having a personal scholar available 24/7. It has deepened my understanding and connection to my faith.",
+        "name": "Fatima K.",
+        "role": "University Student"
+      }
+    },
+    "cta": {
+      "title": "Ready to Transform Your Workflow?",
+      "subtitle": "Sign up today and get instant access to our full suite of AI agents. Your free trial awaits.",
+      "button": "Claim Your Free Trial"
+    },
+    "footer": {
+      "copyright": "AfgAiHub. All rights reserved."
+    }
+  }
+}

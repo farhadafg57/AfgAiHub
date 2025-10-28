@@ -9,6 +9,7 @@ import {
 import './globals.css';
 import { cn } from '@/lib/utils';
 import { FirebaseProvider } from '@/firebase';
+import { NextIntlClientProvider, useMessages } from 'next-intl';
 
 export const metadata: Metadata = {
   title: 'AfgAiHub',
@@ -44,12 +45,16 @@ const jetbrainsMono = JetBrains_Mono({
 
 export default function RootLayout({
   children,
+  params: { locale },
 }: Readonly<{
   children: React.ReactNode;
+  params: { locale: string };
 }>) {
+  const messages = useMessages();
+
   return (
     <html
-      lang="en"
+      lang={locale}
       className={cn(
         'dark',
         inter.variable,
@@ -59,9 +64,9 @@ export default function RootLayout({
       )}
     >
       <body className="font-sans antialiased">
-        <FirebaseProvider>
-          {children}
-        </FirebaseProvider>
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <FirebaseProvider>{children}</FirebaseProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

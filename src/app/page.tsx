@@ -14,11 +14,15 @@ import {
   Check,
   Zap,
   Clock,
-  Sparkles
+  Sparkles,
+  ChevronRight,
+  Languages,
 } from 'lucide-react';
 import { agents } from '@/lib/agents';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useTranslations } from 'next-intl';
+import { LanguageSwitcher } from '@/components/language-switcher';
 
 const iconMap: { [key: string]: React.FC<any> } = {
   'legal-assistant': Scale,
@@ -34,6 +38,8 @@ const iconMap: { [key: string]: React.FC<any> } = {
 };
 
 export default function LandingPage() {
+  const t = useTranslations('LandingPage');
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -59,6 +65,27 @@ export default function LandingPage() {
   
   const allAgents = agents;
 
+  const testimonials = [
+    {
+      quote: t('testimonials.0.quote'),
+      name: t('testimonials.0.name'),
+      role: t('testimonials.0.role'),
+      avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026704d',
+    },
+    {
+      quote: t('testimonials.1.quote'),
+      name: t('testimonials.1.name'),
+      role: t('testimonials.1.role'),
+      avatar: 'https://i.pravatar.cc/150?u=a04258114e29026702d',
+    },
+    {
+      quote: t('testimonials.2.quote'),
+      name: t('testimonials.2.name'),
+      role: t('testimonials.2.role'),
+      avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026704e',
+    },
+  ];
+
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground">
       <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur-lg supports-[backdrop-filter]:bg-background/60">
@@ -68,11 +95,12 @@ export default function LandingPage() {
             <span>AfgAiHub</span>
           </Link>
           <nav className="ml-auto flex items-center gap-2">
+            <LanguageSwitcher />
             <Button variant="ghost" asChild>
-              <Link href="/login">Log In</Link>
+              <Link href="/login">{t('header.login')}</Link>
             </Button>
             <Button asChild className="shadow-lg shadow-primary/20">
-              <Link href="/login">Get Started Free</Link>
+              <Link href="/login">{t('header.getStarted')}</Link>
             </Button>
           </nav>
         </div>
@@ -88,32 +116,32 @@ export default function LandingPage() {
           <motion.div variants={itemVariants} className="mb-6">
             <span className="inline-flex items-center rounded-full bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary">
               <Sparkles className="mr-2 h-4 w-4" />
-              Now with 10 Specialized AI Agents
+              {t('hero.badge')}
             </span>
           </motion.div>
           <motion.h1
             className="text-5xl md:text-7xl font-extrabold tracking-tighter font-headline mb-4 bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/70"
             variants={itemVariants}
           >
-            Your AI-Powered Copilot for Modern Problems
+            {t('hero.title')}
           </motion.h1>
           <motion.p
             className="max-w-3xl text-lg md:text-xl text-muted-foreground mb-10"
             variants={itemVariants}
           >
-            AfgAiHub is a modular ecosystem of specialized AI agents designed to solve complex tasks, boost your productivity, and unlock your creative potential.
+            {t('hero.subtitle')}
           </motion.p>
           <motion.div variants={itemVariants}>
             <Button size="lg" asChild>
-              <Link href="/login">Explore Agents Now</Link>
+              <Link href="/login">{t('hero.cta')}</Link>
             </Button>
           </motion.div>
         </motion.section>
 
         <section className="bg-card/50 py-24">
             <div className="container">
-                <h2 className="text-4xl font-bold text-center mb-4 font-headline">Why AfgAiHub?</h2>
-                <p className="text-lg text-muted-foreground text-center mb-16 max-w-2xl mx-auto">Go beyond generic chatbots. Our specialized agents provide expert-level assistance across a variety of domains.</p>
+                <h2 className="text-4xl font-bold text-center mb-4 font-headline">{t('why.title')}</h2>
+                <p className="text-lg text-muted-foreground text-center mb-16 max-w-2xl mx-auto">{t('why.subtitle')}</p>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
                     <motion.div variants={itemVariants}>
                         <Card className="bg-card/70 border-border/50 h-full">
@@ -121,10 +149,10 @@ export default function LandingPage() {
                                 <div className="flex items-center justify-center h-16 w-16 rounded-full bg-primary/10 text-primary mx-auto mb-4">
                                     <Clock className="h-8 w-8" />
                                 </div>
-                                <CardTitle className="font-headline">Save Time & Effort</CardTitle>
+                                <CardTitle className="font-headline">{t('why.reasons.0.title')}</CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <p className="text-muted-foreground">Automate tedious tasks like research, drafting, and planning. Get instant, high-quality results and focus on what truly matters.</p>
+                                <p className="text-muted-foreground">{t('why.reasons.0.description')}</p>
                             </CardContent>
                         </Card>
                     </motion.div>
@@ -134,10 +162,10 @@ export default function LandingPage() {
                                 <div className="flex items-center justify-center h-16 w-16 rounded-full bg-primary/10 text-primary mx-auto mb-4">
                                     <Sparkles className="h-8 w-8" />
                                 </div>
-                                <CardTitle className="font-headline">Boost Creativity</CardTitle>
+                                <CardTitle className="font-headline">{t('why.reasons.1.title')}</CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <p className="text-muted-foreground">Overcome creative blocks with endless ideas for content, app prototypes, and more. Your AI partner for brainstorming and creation.</p>
+                                <p className="text-muted-foreground">{t('why.reasons.1.description')}</p>
                             </CardContent>
                         </Card>
                     </motion.div>
@@ -147,10 +175,10 @@ export default function LandingPage() {
                                 <div className="flex items-center justify-center h-16 w-16 rounded-full bg-primary/10 text-primary mx-auto mb-4">
                                     <Zap className="h-8 w-8" />
                                 </div>
-                                <CardTitle className="font-headline">Make Informed Decisions</CardTitle>
+                                <CardTitle className="font-headline">{t('why.reasons.2.title')}</CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <p className="text-muted-foreground">From preliminary legal information to medical symptom analysis, get structured data to make better, more informed choices.</p>
+                                <p className="text-muted-foreground">{t('why.reasons.2.description')}</p>
                             </CardContent>
                         </Card>
                     </motion.div>
@@ -160,7 +188,7 @@ export default function LandingPage() {
 
         <section id="agents" className="py-24">
           <div className="container">
-            <h2 className="text-4xl font-bold text-center mb-12 font-headline">Meet Your Team of AI Agents</h2>
+            <h2 className="text-4xl font-bold text-center mb-12 font-headline">{t('agents.title')}</h2>
             <motion.div
               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
               initial="hidden"
@@ -177,11 +205,11 @@ export default function LandingPage() {
                           <div className="flex items-center justify-center h-14 w-14 rounded-xl bg-primary/10 text-primary mb-4">
                             <Icon className="h-7 w-7" />
                           </div>
-                          <CardTitle className="font-headline">{agent.name}</CardTitle>
+                          <CardTitle className="font-headline">{t(`agentNames.${agent.id}`)}</CardTitle>
                       </CardHeader>
                       <CardContent className="flex-grow">
                         <CardDescription>
-                          {agent.description}
+                          {t(`agentDescriptions.${agent.id}`)}
                         </CardDescription>
                       </CardContent>
                     </Card>
@@ -194,71 +222,31 @@ export default function LandingPage() {
 
         <section className="bg-card/50 py-24">
           <div className="container">
-            <h2 className="text-4xl font-bold text-center mb-12 font-headline">What Our Users Say</h2>
+            <h2 className="text-4xl font-bold text-center mb-12 font-headline">{t('testimonials.title')}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              <motion.div variants={itemVariants}>
-                <Card className="h-full bg-card/70 border-border/50">
-                  <CardContent className="pt-6">
-                    <p className="text-muted-foreground mb-4">
-                      "The Career Coach agent gave me the confidence to apply for a management role. The resume feedback was invaluable, and I got the job!"
-                    </p>
-                    <div className="flex items-center space-x-4">
-                      <Avatar>
-                        <AvatarImage src="https://i.pravatar.cc/150?u=a042581f4e29026704d" />
-                        <AvatarFallback>JD</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-semibold">John D.</p>
-                        <p className="text-sm text-muted-foreground">
-                          Newly Promoted Manager
-                        </p>
+              {testimonials.map((testimonial, index) => (
+                 <motion.div key={index} variants={itemVariants}>
+                  <Card className="h-full bg-card/70 border-border/50">
+                    <CardContent className="pt-6">
+                      <p className="text-muted-foreground mb-4">
+                        "{testimonial.quote}"
+                      </p>
+                      <div className="flex items-center space-x-4">
+                        <Avatar>
+                          <AvatarImage src={testimonial.avatar} />
+                          <AvatarFallback>{testimonial.name.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-semibold">{testimonial.name}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {testimonial.role}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-              <motion.div variants={itemVariants}>
-                <Card className="h-full bg-card/70 border-border/50">
-                  <CardContent className="pt-6">
-                    <p className="text-muted-foreground mb-4">
-                      "I used the Travel Planner for my trip to Japan. The itinerary was flawless and saved me hours of research. The restaurant recommendations were spot-on."
-                    </p>
-                    <div className="flex items-center space-x-4">
-                      <Avatar>
-                        <AvatarImage src="https://i.pravatar.cc/150?u=a04258114e29026702d" />
-                        <AvatarFallback>AS</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-semibold">Aisha S.</p>
-                        <p className="text-sm text-muted-foreground">
-                          Travel Enthusiast
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-              <motion.div variants={itemVariants}>
-                <Card className="h-full bg-card/70 border-border/50">
-                  <CardContent className="pt-6">
-                    <p className="text-muted-foreground mb-4">
-                      "As a student, the Quran Tutor is like having a personal scholar available 24/7. It has deepened my understanding and connection to my faith."
-                    </p>
-                    <div className="flex items-center space-x-4">
-                      <Avatar>
-                        <AvatarImage src="https://i.pravatar.cc/150?u=a042581f4e29026704e" />
-                        <AvatarFallback>FK</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-semibold">Fatima K.</p>
-                        <p className="text-sm text-muted-foreground">
-                          University Student
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
             </div>
           </div>
         </section>
@@ -266,13 +254,13 @@ export default function LandingPage() {
         <section className="py-24">
           <div className="container text-center max-w-3xl">
             <h2 className="text-4xl font-bold mb-4 font-headline">
-              Ready to Transform Your Workflow?
+              {t('cta.title')}
             </h2>
             <p className="text-lg text-muted-foreground mb-8">
-              Sign up today and get instant access to our full suite of AI agents. Your free trial awaits.
+             {t('cta.subtitle')}
             </p>
             <Button size="lg" asChild className="shadow-lg shadow-primary/20">
-              <Link href="/login">Claim Your Free Trial</Link>
+              <Link href="/login">{t('cta.button')}</Link>
             </Button>
           </div>
         </section>
@@ -280,7 +268,7 @@ export default function LandingPage() {
 
       <footer className="border-t border-border/50 py-8">
         <div className="container text-center text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} AfgAiHub. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} {t('footer.copyright')}</p>
         </div>
       </footer>
     </div>
