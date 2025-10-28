@@ -1,12 +1,12 @@
 'use client';
 
 import { firebaseConfig } from '@/firebase/config';
-import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
-import { getAuth, onAuthStateChanged, User, Auth } from 'firebase/auth';
-import { getFirestore, Firestore } from 'firebase/firestore'
-import { getFunctions, Functions } from 'firebase/functions';
-import { getStorage, FirebaseStorage } from 'firebase/storage';
-import React, { createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
+import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app';
+import { getAuth, onAuthStateChanged, type User, type Auth } from 'firebase/auth';
+import { getFirestore, type Firestore } from 'firebase/firestore'
+import { getFunctions, type Functions } from 'firebase/functions';
+import { getStorage, type FirebaseStorage } from 'firebase/storage';
+import React, { createContext, useContext, type ReactNode, useMemo, useState, useEffect } from 'react';
 
 let firebaseApp: FirebaseApp;
 

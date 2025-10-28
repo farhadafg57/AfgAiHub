@@ -1,7 +1,7 @@
 import { initializeApp, getApps } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { onCall, onRequest, HttpsError } from 'firebase-functions/v2/https';
-import { defineString, defineSecret } from 'firebase-functions/params';
+import { defineSecret, defineString } from 'firebase-functions/params';
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 import * as crypto from 'crypto';
@@ -29,7 +29,7 @@ function encryptPin(pin: string, key: string): string {
   return Buffer.from(iv.toString('hex') + encrypted, 'utf8').toString('base64');
 }
 
-export const createPaymentSession = onCall(async (request) => {
+export const createPaymentSession = onCall({ secrets: [hesabpayApiKey] }, async (request) => {
   const { items, email, successUrl, failUrl } = request.data;
   const uid = request.auth?.uid;
 
@@ -61,13 +61,7 @@ export const createPaymentSession = onCall(async (request) => {
 
     if (response.status !== 200 || !response.data?.sessionId) {
       console.error("Invalid response from HesabPay:", response.data);
-      await db.collection('payment_errors').add({
-        function: 'createPaymentSession',
-        error: 'Invalid response from HesabPay',
-        data: response.data,
-        timestamp: new Date(),
-      });
-      throw new Error('Invalid response from HesabPay');
+      throw new HttpsError('internal', 'Invalid response from HesabPay');
     }
 
     const { sessionId, paymentUrl } = response.data;
@@ -89,12 +83,6 @@ export const createPaymentSession = onCall(async (request) => {
     return { success: true, checkout_url, sessionId };
   } catch (err: any) {
     console.error('Error creating payment session:', err.response?.data || err.message);
-    await db.collection('payment_errors').add({
-      function: 'createPaymentSession',
-      error: err.message,
-      details: err.response?.data,
-      timestamp: new Date(),
-    });
     throw new HttpsError('internal', 'Failed to create payment session.', err.message);
   }
 });
@@ -125,34 +113,34 @@ export const hesabWebhook = onRequest({ secrets: [hesabpayWebhookSecret] }, asyn
     return;
   }
 
-  const { transaction_id, success, amount, email } = req.body;
+  const { transaction_id, success } = req.body;
 
   if (!transaction_id) {
     res.status(400).send('Missing transaction_id in webhook payload.');
     return;
   }
 
-  const transactionRef = db.collection('transactions').doc(transaction_id);
+  // The transaction_id from HesabPay corresponds to our sessionId
+  const sessionRef = db.collection('payments/sessions').doc(transaction_id);
 
   try {
-    await db.runTransaction(async (t) => {
-      const doc = await t.get(transactionRef);
-      if (!doc.exists || doc.data()?.status !== (success ? 'success' : 'failed')) {
-        t.set(transactionRef, {
-          transaction_id,
-          status: success ? 'success' : 'failed',
-          amount,
-          email: email || null,
-          updatedAt: new Date(),
-          webhookPayload: req.body,
-        }, { merge: true });
-      }
+    const sessionDoc = await sessionRef.get();
+    if (!sessionDoc.exists) {
+      console.warn(`Webhook received for non-existent session: ${transaction_id}`);
+      res.status(404).send('Session not found.');
+      return;
+    }
+
+    await sessionRef.update({
+      status: success ? 'success' : 'failed',
+      webhookPayload: req.body,
+      updatedAt: new Date(),
     });
 
-    console.log(`Transaction ${transaction_id} status updated to ${success ? 'success' : 'failed'}`);
+    console.log(`Payment session ${transaction_id} status updated to ${success ? 'success' : 'failed'}`);
     res.status(200).send({ received: true });
   } catch (error: any) {
-    console.error(`Error updating transaction ${transaction_id}:`, error);
+    console.error(`Error updating payment session ${transaction_id}:`, error);
     res.status(500).send('Internal Server Error while processing webhook.');
   }
 });
@@ -203,14 +191,15 @@ export const distributePayment = onCall({ secrets: [hesabpayApiKey, merchantPin]
     return { success: true, transactionId: txnId, summary: response.data };
   } catch (err: any) {
     console.error('Error distributing payment:', err.response?.data || err.message);
+    const errorData = err.response?.data || err.message;
     await distributionLogRef.set({
       txnId,
       initiatorUserId: uid,
       vendors,
       status: 'failed',
-      error: err.response?.data || err.message,
+      error: errorData,
       createdAt: new Date(),
     });
-    throw new HttpsError('internal', 'Failed to distribute payments.', err.message);
+    throw new HttpsError('internal', 'Failed to distribute payments.', errorData);
   }
 });

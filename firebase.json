@@ -12,8 +12,7 @@
       ],
       "predeploy": [
         "npm --prefix \"$RESOURCE_DIR\" run build"
-      ],
-      "location": "us-central1"
+      ]
     }
   ]
 }
