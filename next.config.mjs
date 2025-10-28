@@ -4,10 +4,7 @@ const nextConfig = {
     ppr: true,
   },
   compiler: {
-    reactRemoveProperties: true,
-    removeConsole: {
-      exclude: ['error'],
-    },
+    removeConsole: process.env.NODE_ENV === 'production',
   },
   images: {
     formats: ['image/avif', 'image/webp'],

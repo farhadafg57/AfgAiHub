@@ -13,8 +13,8 @@ export default {
       fontFamily: {
         sans: ['var(--font-sans)', 'sans-serif'],
         body: ['var(--font-poppins)', 'sans-serif'],
-        headline: ['"Space Grotesk"', 'sans-serif'],
-        code: ['"JetBrains Mono"', 'monospace'],
+        headline: ['var(--font-space-grotesk)', 'sans-serif'],
+        code: ['var(--font-jetbrains-mono)', 'monospace'],
       },
       colors: {
         background: 'hsl(var(--background))',
