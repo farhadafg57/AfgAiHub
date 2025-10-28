@@ -1,12 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
-    ppr: true,
+    ppr: false, // Disabling PPR to resolve startup error
     serverActions: true,
-    turbo: {
-      resolveAlias: {},
-      rules: {},
-    },
+    turbo: { resolveAlias: {}, rules: {} },
   },
   compiler: {
     reactRemoveProperties: true,
@@ -19,13 +16,13 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'images.unsplash.com',
         port: '',
-        pathname: '/**',
+        pathname: '**',
       },
-       {
+      {
         protocol: 'https',
         hostname: 'i.pravatar.cc',
         port: '',
-        pathname: '/**',
+        pathname: '**',
       },
     ],
   },
