@@ -12,9 +12,9 @@ export default {
     extend: {
       fontFamily: {
         sans: ['var(--font-sans)', 'sans-serif'],
-        body: ['var(--font-poppins)', 'sans-serif'],
-        headline: ['var(--font-space-grotesk)', 'sans-serif'],
-        code: ['var(--font-jetbrains-mono)', 'monospace'],
+        body: ['var(--font-body)', 'sans-serif'],
+        headline: ['var(--font-headline)', 'sans-serif'],
+        code: ['var(--font-code)', 'monospace'],
       },
       colors: {
         background: 'hsl(var(--background))',

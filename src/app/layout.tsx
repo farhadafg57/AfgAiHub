@@ -24,21 +24,21 @@ const inter = Inter({
 const poppins = Poppins({
   subsets: ['latin'],
   display: 'swap',
-  variable: '--font-poppins',
+  variable: '--font-body',
   weight: ['400', '500', '600', '700'],
 });
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ['latin'],
   display: 'swap',
-  variable: '--font-space-grotesk',
+  variable: '--font-headline',
   weight: ['400', '500', '700'],
 });
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ['latin'],
   display: 'swap',
-  variable: '--font-jetbrains-mono',
+  variable: '--font-code',
   weight: ['400', '500', '700'],
 });
 

@@ -2,9 +2,15 @@
 const nextConfig = {
   experimental: {
     ppr: true,
+    serverActions: true,
+    turbo: {
+      resolveAlias: {},
+      rules: {},
+    },
   },
   compiler: {
-    removeConsole: process.env.NODE_ENV === 'production',
+    reactRemoveProperties: true,
+    removeConsole: true,
   },
   images: {
     formats: ['image/avif', 'image/webp'],
@@ -12,6 +18,14 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: 'images.unsplash.com',
+        port: '',
+        pathname: '/**',
+      },
+       {
+        protocol: 'https',
+        hostname: 'i.pravatar.cc',
+        port: '',
+        pathname: '/**',
       },
     ],
   },
