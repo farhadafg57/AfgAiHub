@@ -7,10 +7,11 @@
  * See a full list of supported triggers at https://firebase.google.com/docs/functions
  */
 
-import {setGlobalOptions} from "firebase-functions/v2";
+import { setGlobalOptions } from "firebase-functions/v2";
 import * as payments from './payments';
 
-setGlobalOptions({ maxInstances: 10 });
+// Set the region for all functions in this file
+setGlobalOptions({ region: "us-central1", maxInstances: 10 });
 
 export const createPaymentSession = payments.createPaymentSession;
 export const hesabWebhook = payments.hesabWebhook;
