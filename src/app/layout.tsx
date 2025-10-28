@@ -65,7 +65,7 @@ export default async function RootLayout({
       )}
     >
       <body className="font-sans antialiased">
-        <NextIntlClientProvider locale={locale} messages={messages}>
+        <NextIntlClientProvider messages={messages}>
           <FirebaseProvider>{children}</FirebaseProvider>
         </NextIntlClientProvider>
       </body>
