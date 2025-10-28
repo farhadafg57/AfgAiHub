@@ -1,11 +1,11 @@
-/** @type {import('next').NextConfig} */
-const withNextIntl = require('next-intl/plugin')();
+import createNextIntlPlugin from 'next-intl/plugin';
 
+const withNextIntl = createNextIntlPlugin();
+
+/** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
-    serverActions: {
-      bodySizeLimit: '2mb',
-    },
+    serverActions: true,
   },
   images: {
     formats: ['image/avif', 'image/webp'],
@@ -14,15 +14,12 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'images.unsplash.com',
       },
-       {
+      {
         protocol: 'https',
         hostname: 'i.pravatar.cc',
       },
     ],
   },
-  typescript: {
-    ignoreBuildErrors: true,
-  }
 };
 
 export default withNextIntl(nextConfig);
