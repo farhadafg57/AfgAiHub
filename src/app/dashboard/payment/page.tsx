@@ -25,10 +25,14 @@ export default function PaymentPage() {
         return;
       }
       
-      const successUrl = `${window.location.origin}/payment/success`;
-      const failUrl = `${window.location.origin}/payment/fail`;
-
-      const result = await createPaymentSessionAction(user.email, successUrl, failUrl);
+      // The success and fail URLs are now relative paths.
+      // They will be resolved relative to the origin by the server action.
+      const result = await createPaymentSessionAction({
+        email: user.email, 
+        userId: user.uid,
+        successUrl: '/payment/success', 
+        failUrl: '/payment/fail'
+      });
 
       if (result.checkout_url) {
         window.location.href = result.checkout_url;

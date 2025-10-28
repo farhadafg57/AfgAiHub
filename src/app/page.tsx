@@ -11,18 +11,17 @@ import {
   Plane,
   HeartPulse,
   PenSquare,
-  Check,
-  Zap,
-  Clock,
   Sparkles,
-  ChevronRight,
+  Clock,
+  Zap,
   Languages,
 } from 'lucide-react';
 import { agents } from '@/lib/agents';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useTranslations } from 'next-intl';
 import { LanguageSwitcher } from '@/components/language-switcher';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 const iconMap: { [key: string]: React.FC<any> } = {
   'legal-assistant': Scale,
@@ -70,19 +69,19 @@ export default function LandingPage() {
       quote: t('testimonials.0.quote'),
       name: t('testimonials.0.name'),
       role: t('testimonials.0.role'),
-      avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026704d',
+      avatar: PlaceHolderImages.find(p => p.id === 'testimonial-1')?.imageUrl,
     },
     {
       quote: t('testimonials.1.quote'),
       name: t('testimonials.1.name'),
       role: t('testimonials.1.role'),
-      avatar: 'https://i.pravatar.cc/150?u=a04258114e29026702d',
+      avatar: PlaceHolderImages.find(p => p.id === 'testimonial-2')?.imageUrl,
     },
     {
       quote: t('testimonials.2.quote'),
       name: t('testimonials.2.name'),
       role: t('testimonials.2.role'),
-      avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026704e',
+      avatar: PlaceHolderImages.find(p => p.id === 'testimonial-3')?.imageUrl,
     },
   ];
 
@@ -208,9 +207,9 @@ export default function LandingPage() {
                           <CardTitle className="font-headline">{t(`agentNames.${agent.id}`)}</CardTitle>
                       </CardHeader>
                       <CardContent className="flex-grow">
-                        <CardDescription>
+                        <p className="text-muted-foreground">
                           {t(`agentDescriptions.${agent.id}`)}
-                        </CardDescription>
+                        </p>
                       </CardContent>
                     </Card>
                   </motion.div>

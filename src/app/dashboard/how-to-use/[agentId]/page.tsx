@@ -10,7 +10,6 @@ import {
 } from '@/components/ui/card';
 import { guides, AgentGuide } from '@/lib/how-to-use-guides';
 import { agents } from '@/lib/agents';
-import { Badge } from '@/components/ui/badge';
 import { Lightbulb, Terminal } from 'lucide-react';
 
 type HowToUsePageProps = {

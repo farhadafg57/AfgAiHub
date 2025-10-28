@@ -5,11 +5,12 @@ import {
   JetBrains_Mono,
   Inter,
 } from 'next/font/google';
+import { NextIntlClientProvider } from 'next-intl';
+import { getMessages } from 'next-intl/server';
 
 import './globals.css';
 import { cn } from '@/lib/utils';
 import { FirebaseProvider } from '@/firebase';
-import { NextIntlClientProvider, useMessages } from 'next-intl';
 
 export const metadata: Metadata = {
   title: 'AfgAiHub',
@@ -43,14 +44,14 @@ const jetbrainsMono = JetBrains_Mono({
   weight: ['400', '500', '700'],
 });
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
   params: { locale },
 }: Readonly<{
   children: React.ReactNode;
   params: { locale: string };
 }>) {
-  const messages = useMessages();
+  const messages = await getMessages();
 
   return (
     <html
